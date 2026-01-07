@@ -1,6 +1,7 @@
 from flask import Flask, render_template, jsonify
 import requests
 from datetime import datetime
+import os
 
 app = Flask(__name__)
 
@@ -173,4 +174,8 @@ def user_detail(username):
         return render_template('user_detail.html', user_data=None)
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=80)
+    # For local development
+    app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 80)))
+else:
+    # For Vercel deployment
+    app = app
