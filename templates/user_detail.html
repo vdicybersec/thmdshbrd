@@ -18,7 +18,12 @@
 
     <div class="max-w-6xl mx-auto px-4 py-8">
         {% if user_data %}
-        <h1 class="text-2xl md:text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600 text-center mb-6 md:mb-8 drop-shadow-sm">Detail Pengguna: {{ user_data.username }}</h1>
+        <div class="flex items-center justify-center md:justify-between mb-6 md:mb-8">
+            <h1 class="text-2xl md:text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600 drop-shadow-sm">Detail Pengguna: {{ user_data.username }}</h1>
+            <div class="hidden md:block">
+                <button id="refresh-user-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg shadow" onclick="refreshUser()">Refresh Data</button>
+            </div>
+        </div>
 
         <!-- Profile Section -->
         <div class="bg-white/80 backdrop-blur-sm rounded-2xl shadow-2xl p-6 md:p-8 mb-6 md:mb-8 border border-white/20">
@@ -43,76 +48,193 @@
             <h2 class="text-lg md:text-xl lg:text-2xl font-bold text-gray-800 mb-4 md:mb-6 border-b-2 border-blue-500 pb-2 bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">Aktivitas Harian</h2>
             {% if activity %}
             <div class="w-full max-w-4xl mx-auto bg-gray-50 p-4 md:p-6 rounded-xl">
-                <canvas id="activityChart" class="w-full h-48 md:h-64"></canvas>
+                <div class="flex items-center justify-between mb-3">
+                    <div class="flex items-center space-x-2">
+                        <label class="text-sm font-semibold">Tampilkan:</label>
+                        <select id="range-select" class="border rounded px-2 py-1 text-sm">
+                            <option value="last7">7 Hari Terakhir (default)</option>
+                            <option value="monthweek">Pilih Bulan & Minggu</option>
+                        </select>
+                    </div>
+                    <div id="month-week-controls" class="hidden items-center space-x-2">
+                        <select id="month-select" class="border rounded px-2 py-1 text-sm"></select>
+                        <select id="week-select" class="border rounded px-2 py-1 text-sm"></select>
+                        <button id="apply-range-btn" class="bg-blue-600 text-white px-3 py-1 rounded text-sm">Terapkan</button>
+                    </div>
+                </div>
+                <canvas id="activityChart" style="width:100%; height:320px; max-height:420px;"></canvas>
             </div>
             <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
             <script>
                 const activityData = {{ activity | safe }};
-                const labels = activityData.map(item => item.date);
-                const counts = activityData.map(item => item.count);
+                const activityMap = {};
+                activityData.forEach(item => activityMap[item.date] = item.count);
 
-                const ctx = document.getElementById('activityChart').getContext('2d');
-                const activityChart = new Chart(ctx, {
-                    type: 'line',
-                    data: {
-                        labels: labels,
-                        datasets: [{
-                            label: 'Aktivitas Harian',
-                            data: counts,
-                            borderColor: 'rgba(59, 130, 246, 1)',
-                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                            fill: true,
-                            tension: 0.4,
-                            pointRadius: 4,
-                            pointHoverRadius: 6,
-                            pointBackgroundColor: 'rgba(59, 130, 246, 1)',
-                            pointBorderColor: '#ffffff',
-                            pointBorderWidth: 2
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: {
-                                display: true,
-                                position: 'top',
-                                labels: {
-                                    font: {
-                                        size: 14,
-                                        weight: 'bold'
-                                    }
-                                }
-                            }
-                        },
-                        scales: {
-                            y: {
-                                beginAtZero: true,
-                                ticks: {
-                                    stepSize: 1,
-                                    font: {
-                                        size: 12,
-                                        weight: 'bold'
-                                    }
-                                },
-                                grid: {
-                                    color: 'rgba(0, 0, 0, 0.1)'
-                                }
-                            },
-                            x: {
-                                ticks: {
-                                    font: {
-                                        size: 12,
-                                        weight: 'bold'
-                                    }
-                                },
-                                grid: {
-                                    color: 'rgba(0, 0, 0, 0.1)'
-                                }
-                            }
-                        }
+                // helpers
+                function fmtDate(d) {
+                    const yyyy = d.getFullYear();
+                    const mm = String(d.getMonth() + 1).padStart(2, '0');
+                    const dd = String(d.getDate()).padStart(2, '0');
+                    return `${yyyy}-${mm}-${dd}`;
+                }
+
+                function datesBetween(start, end) {
+                    const arr = [];
+                    const cur = new Date(start);
+                    while (cur <= end) {
+                        arr.push(fmtDate(cur));
+                        cur.setDate(cur.getDate() + 1);
+                    }
+                    return arr;
+                }
+
+                // Build month & week controls
+                const monthSelect = document.getElementById('month-select');
+                const weekSelect = document.getElementById('week-select');
+                const rangeSelect = document.getElementById('range-select');
+                const monthWeekControls = document.getElementById('month-week-controls');
+                const applyRangeBtn = document.getElementById('apply-range-btn');
+
+                const currentYear = {{ current_year }};
+                const monthNames = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+
+                function populateMonths() {
+                    monthSelect.innerHTML = '';
+                    for (let m = 1; m <= 12; m++) {
+                        const opt = document.createElement('option');
+                        opt.value = m;
+                        opt.text = monthNames[m-1];
+                        if (m === (new Date()).getMonth() + 1) opt.selected = true;
+                        monthSelect.appendChild(opt);
+                    }
+                }
+
+                function populateWeeksForMonth(month) {
+                    weekSelect.innerHTML = '';
+                    const year = currentYear;
+                    const first = new Date(year, month-1, 1);
+                    const last = new Date(year, month, 0); // last day in month
+                    let start = 1;
+                    let weekIdx = 1;
+                    while (start <= last.getDate()) {
+                        const end = Math.min(start + 6, last.getDate());
+                        const opt = document.createElement('option');
+                        const s = new Date(year, month-1, start);
+                        const e = new Date(year, month-1, end);
+                        opt.value = `${start}-${end}`;
+                        opt.text = `Minggu ${weekIdx} (${fmtDate(s)} sampai ${fmtDate(e)})`;
+                        weekSelect.appendChild(opt);
+                        start += 7;
+                        weekIdx += 1;
+                    }
+                }
+
+                populateMonths();
+                populateWeeksForMonth((new Date()).getMonth() + 1);
+
+                monthSelect.addEventListener('change', (e) => {
+                    populateWeeksForMonth(parseInt(e.target.value, 10));
+                });
+
+                rangeSelect.addEventListener('change', (e) => {
+                    if (e.target.value === 'monthweek') {
+                        monthWeekControls.classList.remove('hidden');
+                    } else {
+                        monthWeekControls.classList.add('hidden');
+                        renderLastNDays(7);
                     }
                 });
+
+                applyRangeBtn.addEventListener('click', () => {
+                    const mm = parseInt(monthSelect.value, 10);
+                    const wk = weekSelect.value.split('-');
+                    const startDay = parseInt(wk[0], 10);
+                    const endDay = parseInt(wk[1], 10);
+                    const start = new Date(currentYear, mm-1, startDay);
+                    const end = new Date(currentYear, mm-1, endDay);
+                    renderForRange(start, end);
+                });
+
+                // Chart instance
+                let activityChart = null;
+
+                function renderChart(dates, counts) {
+                    const ctx = document.getElementById('activityChart').getContext('2d');
+                    if (activityChart) activityChart.destroy();
+
+                    // Compute a "nice" max for the y-axis so bars scale proportionally
+                    const maxCount = counts.length ? Math.max(...counts) : 0;
+                    function niceMax(n) {
+                        if (n <= 5) return 5;
+                        const mag = Math.pow(10, Math.floor(Math.log10(n)));
+                        const norm = Math.ceil(n / mag);
+                        let unit;
+                        if (norm <= 1) unit = 1;
+                        else if (norm <= 2) unit = 2;
+                        else if (norm <= 5) unit = 5;
+                        else unit = 10;
+                        return unit * mag;
+                    }
+                    const suggestedMax = niceMax(maxCount);
+
+                    function fmtNumber(v) {
+                        if (v >= 1000000) return (v / 1000000).toFixed(1).replace(/\.0$/, '') + 'M';
+                        if (v >= 1000) return (v / 1000).toFixed(1).replace(/\.0$/, '') + 'k';
+                        return v;
+                    }
+
+                    const stepSize = Math.max(1, Math.ceil(suggestedMax / 5));
+
+                    activityChart = new Chart(ctx, {
+                        type: 'bar',
+                        data: {
+                            labels: dates,
+                            datasets: [{
+                                label: 'Jumlah Event per Hari',
+                                data: counts,
+                                backgroundColor: 'rgba(59, 130, 246, 0.8)',
+                                borderColor: 'rgba(59, 130, 246, 1)',
+                                borderWidth: 1,
+                                maxBarThickness: 40,
+                                barPercentage: 0.75,
+                                categoryPercentage: 0.85
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: { legend: { display: false }, tooltip: { mode: 'index', intersect: false } },
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    suggestedMax: suggestedMax,
+                                    ticks: { maxTicksLimit: 6, stepSize: stepSize, callback: function(val) { return fmtNumber(val); } },
+                                    grid: { color: 'rgba(0,0,0,0.05)' }
+                                },
+                                x: { ticks: { maxRotation: 45, minRotation: 0 }, grid: { display: false } }
+                            }
+                        }
+                    });
+                }
+
+                function renderLastNDays(n) {
+                    const today = new Date();
+                    const start = new Date();
+                    start.setDate(today.getDate() - (n - 1));
+                    const dates = datesBetween(start, today);
+                    const counts = dates.map(d => activityMap[d] || 0);
+                    renderChart(dates, counts);
+                }
+
+                function renderForRange(start, end) {
+                    const dates = datesBetween(start, end);
+                    const counts = dates.map(d => activityMap[d] || 0);
+                    renderChart(dates, counts);
+                }
+
+                // default: 7 days
+                renderLastNDays(7);
+
             </script>
             {% else %}
             <p class="text-gray-500 text-center py-6 md:py-8 text-sm md:text-base lg:text-lg">Tidak ada data aktivitas untuk tahun ini.</p>
@@ -203,6 +325,27 @@
         window.addEventListener('load', function() {
             document.getElementById('loading-screen').style.display = 'none';
         });
+
+        function refreshUser() {
+            const btn = document.getElementById('refresh-user-btn');
+            btn.disabled = true;
+            btn.innerText = 'Memperbarui...';
+            fetch('/user/{{ user_data.username }}/refresh', { method: 'POST' })
+                .then(r => r.json())
+                .then(j => {
+                    if (j.status === 'ok') window.location.reload();
+                    else {
+                        alert('Refresh gagal: ' + (j.message || 'unknown'));
+                        btn.disabled = false;
+                        btn.innerText = 'Refresh Data';
+                    }
+                })
+                .catch(err => {
+                    alert('Permintaan refresh gagal');
+                    btn.disabled = false;
+                    btn.innerText = 'Refresh Data';
+                });
+        }
     </script>
 </body>
 </html>
