@@ -20,7 +20,8 @@
         {% if user_data %}
         <div class="flex items-center justify-center md:justify-between mb-6 md:mb-8">
             <h1 class="text-2xl md:text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600 drop-shadow-sm">Detail Pengguna: {{ user_data.username }}</h1>
-            <div class="hidden md:block">
+            <div class="hidden md:flex items-center space-x-2">
+                <a href="{{ url_for('index') }}" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-lg shadow">Kembali</a>
                 <button id="refresh-user-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg shadow" onclick="refreshUser()">Refresh Data</button>
             </div>
         </div>
