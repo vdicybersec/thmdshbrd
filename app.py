@@ -19,7 +19,8 @@ users_info = [
     {'username': 'kurniawanhanif63', 'full_name': 'Hanif Kurniawan', 'learning_path': 'L2 Bootcamp', 'role': 'L2 Bootcamp'},
     {'username': 'triassonn', 'full_name': 'Trias Wijaksono', 'learning_path': 'L2 Bootcamp', 'role': 'L2 Bootcamp'},
     {'username': 'arvindrasp', 'full_name': 'Arvindra', 'learning_path': 'L2 Bootcamp', 'role': 'L2 Bootcamp'},
-    {'username': 'daffa.rizky90', 'full_name': 'Daffa', 'learning_path': 'L2 Bootcamp', 'role': 'L2 Bootcamp'}
+    {'username': 'daffa.rizky90', 'full_name': 'Daffa', 'learning_path': 'L2 Bootcamp', 'role': 'L2 Bootcamp'},
+    {'username': 'M.hafizd', 'full_name': 'Muhammad Hafizd', 'learning_path': 'L2 Bootcamp', 'role': 'L2 Bootcamp'}
 ]
 
 ## Simple in-memory cache to reduce repeated HTTP calls
