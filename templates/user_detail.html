@@ -260,7 +260,7 @@
                     <tbody>
                         {% for badge in user_data.badges %}
                         <tr class="{% if loop.index % 2 == 0 %}bg-blue-50/50{% else %}bg-white{% endif %} hover:bg-blue-100/50 transition-colors">
-                            <td class="border border-gray-200 px-3 md:px-6 py-2 md:py-4"><img src="https://tryhackme.com{{ badge.image }}" alt="{{ badge.title }}" class="w-8 h-8 md:w-10 md:h-10 lg:w-12 lg:h-12 rounded-full border-2 border-blue-300 shadow-md hover:scale-110 transition-transform"></td>
+                            <td class="border border-gray-200 px-3 md:px-6 py-2 md:py-4"><img src="{{ badge.image if badge.image.startswith('http') else 'https://tryhackme.com' + badge.image }}" alt="{{ badge.title }}" class="w-8 h-8 md:w-10 md:h-10 lg:w-12 lg:h-12 rounded-full border-2 border-blue-300 shadow-md hover:scale-110 transition-transform"></td>
                             <td class="border border-gray-200 px-3 md:px-6 py-2 md:py-4 font-semibold text-gray-800 text-sm md:text-base">{{ badge.title }}</td>
                             <td class="border border-gray-200 px-3 md:px-6 py-2 md:py-4 text-gray-600 text-sm hidden md:table-cell">{{ badge.description }}</td>
                         </tr>
