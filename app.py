@@ -1,6 +1,6 @@
 from flask import Flask, render_template, jsonify
 import requests
-from datetime import datetime
+from datetime import datetime, timedelta
 import os
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -67,6 +67,10 @@ def get_user_data(user_info, lightweight=False, force=False):
             'role': user_info['role']
         }
 
+        # Fetch certificates and weekly activity for dashboard
+        user_data['certificates'] = get_certificates(username)
+        user_data['weekly_activity_count'] = get_weekly_activity_count(user_id)
+
         # Only fetch heavy details when not in lightweight mode
         if not lightweight:
             user_data['completed_rooms'] = get_completed_rooms(user_id)
@@ -79,12 +83,6 @@ def get_user_data(user_info, lightweight=False, force=False):
             user_data['activity'] = []
             user_data['current_year'] = ''
             user_data['badges'] = []
-
-        # Add certificate logic
-        if user_info['learning_path'] == 'L2 Bootcamp':
-            user_data['certificate'] = 'L2 Bootcamp Certificate'
-        else:
-            user_data['certificate'] = 'General Certificate'
 
         # store in cache
         CACHE[cache_key] = {'ts': time.time(), 'data': user_data}
@@ -106,11 +104,10 @@ def get_user_data(user_info, lightweight=False, force=False):
             'completed_rooms': [],
             'activity': [],
             'current_year': '',
-            'badges': []
+            'badges': [],
+            'certificates': [],
+            'weekly_activity_count': 0
         }
-
-        # Add certificate logic in case of missing data
-        user_data['certificate'] = 'Onprogress'
 
         CACHE[cache_key] = {'ts': time.time(), 'data': user_data}
         return user_data
@@ -207,6 +204,36 @@ def get_badges(user_id):
     else:
         return []
 
+def get_certificates(username):
+    """Fetch certificates from TryHackMe API to check path completion status."""
+    certs_url = f'https://tryhackme.com/api/v2/certificates/public-list?username={username}'
+    response = requests.get(certs_url)
+    if response.status_code == 200:
+        data = response.json().get('data', {})
+        certs = data.get('docs', [])
+        return certs
+    else:
+        return []
+
+def get_weekly_activity_count(user_id):
+    """Get total activity count for the current week (last 7 days)."""
+    current_year = datetime.now().year
+    activity = get_yearly_activity(user_id, current_year)
+
+    today = datetime.now()
+    week_ago = today - timedelta(days=6)  # Last 7 days including today
+
+    total_count = 0
+    for item in activity:
+        try:
+            item_date = datetime.strptime(item['date'], '%Y-%m-%d')
+            if week_ago <= item_date <= today:
+                total_count += item['count']
+        except:
+            continue
+
+    return total_count
+
 @app.template_filter('datetimeformat')
 def datetimeformat(value, format='%d-%m-%Y %H:%M'):
     if value:
@@ -214,6 +241,59 @@ def datetimeformat(value, format='%d-%m-%Y %H:%M'):
         return date.strftime(format)
     else:
         return ''
+
+# Mapping untuk nama path yang lebih rapi
+PATH_NAME_MAP = {
+    'pathway-soclevel1': 'SOC Level 1',
+    'pathway-soclevel2': 'SOC Level 2',
+    'soc-level-1': 'SOC Level 1',
+    'soc-level-2': 'SOC Level 2',
+    'soclevel1': 'SOC Level 1',
+    'soclevel2': 'SOC Level 2',
+}
+
+@app.template_filter('format_path_name')
+def format_path_name(value):
+    """Format path name to be more readable."""
+    if not value:
+        return 'Path'
+
+    # Cek di mapping
+    value_lower = value.lower().replace(' ', '-').replace('_', '-')
+    if value_lower in PATH_NAME_MAP:
+        return PATH_NAME_MAP[value_lower]
+
+    # Jika tidak ada di mapping, format manual
+    # Contoh: "pathway-soclevel1" -> "Pathway Soclevel1"
+    formatted = value.replace('-', ' ').replace('_', ' ').title()
+    return formatted
+
+def check_soc_completion(certificates):
+    """Check if SOC Level 1 and SOC Level 2 are completed."""
+    soc_l1_done = False
+    soc_l2_done = False
+    other_paths = []
+
+    for cert in certificates:
+        path_name = cert.get('pathName') or cert.get('name') or ''
+        path_lower = path_name.lower().replace(' ', '').replace('-', '').replace('_', '')
+
+        if 'soclevel1' in path_lower or 'socl1' in path_lower or 'soc1' in path_lower:
+            soc_l1_done = True
+        elif 'soclevel2' in path_lower or 'socl2' in path_lower or 'soc2' in path_lower:
+            soc_l2_done = True
+        else:
+            other_paths.append(path_name)
+
+    return {
+        'soc_l1': soc_l1_done,
+        'soc_l2': soc_l2_done,
+        'soc_count': (1 if soc_l1_done else 0) + (1 if soc_l2_done else 0),
+        'all_complete': soc_l1_done and soc_l2_done,
+        'other_paths': other_paths
+    }
+
+app.jinja_env.globals['check_soc_completion'] = check_soc_completion
 
 @app.route('/')
 def index():
@@ -238,7 +318,9 @@ def index():
                     'badges_number': 0,
                     'avatar': '',
                     'learning_path': u.get('learning_path', ''),
-                    'role': u.get('role', '')
+                    'role': u.get('role', ''),
+                    'certificates': [],
+                    'weekly_activity_count': 0
                 }
             data_list.append(user_data)
 
