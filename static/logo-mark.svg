@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="L2 Learning Progress">
+  <rect width="64" height="64" rx="14" fill="#EA580C"/>
+  <path d="M32 9.5 50.5 16v14.2c0 11.6-7.6 20.4-18.5 24.3C21.1 50.6 13.5 41.8 13.5 30.2V16Z" fill="#FFFFFF"/>
+  <rect x="21.5" y="34" width="5.5" height="9" rx="1.5" fill="#C2410C"/>
+  <rect x="29.25" y="28" width="5.5" height="15" rx="1.5" fill="#C2410C"/>
+  <rect x="37" y="22" width="5.5" height="21" rx="1.5" fill="#C2410C"/>
+</svg>

@@ -40,8 +40,9 @@
                 <button type="button" aria-pressed="false" data-filter="idle">Tidak aktif<span class="count">{{ idle }}</span></button>
                 <button type="button" aria-pressed="false" data-filter="no-l1">Belum SOC L1<span class="count">{{ no_l1 }}</span></button>
             </div>
-            <span class="toolbar__end" data-result-count aria-live="polite"></span>
+            <span class="toolbar__end"><span data-result-count aria-live="polite"></span></span>
         </div>
+        <p class="table-hint">{{ ui.icon('pointer') }}Klik baris peserta untuk melihat detail progress, badge, dan room</p>
 
         {% if people %}
         <div class="table-wrap">
@@ -56,6 +57,7 @@
                         <th scope="col" aria-sort="none"><button type="button" data-sort="weekly" data-type="num">7 hari terakhir{{ ui.icon('sort', 'icon sort-icon') }}</button></th>
                         <th scope="col">Jalur SOC</th>
                         <th scope="col" aria-sort="none"><button type="button" data-sort="idle" data-type="num">Status{{ ui.icon('sort', 'icon sort-icon') }}</button></th>
+                        <th scope="col" class="c-go"><span class="sr-only">Detail</span></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -72,6 +74,7 @@
                                 <div>
                                     <a class="person__name" href="{{ url_for('user_detail', username=p.username) }}">{{ p.name }}</a>
                                     <div class="person__user">@{{ p.username }}</div>
+                                    {{ ui.badge_row(p) }}
                                 </div>
                             </div>
                         </td>
@@ -86,6 +89,7 @@
                         <td class="c-week">{{ ui.week_strip(p) }}</td>
                         <td class="c-soc">{{ ui.soc_tags(p.soc) }}</td>
                         <td class="c-status">{{ ui.activity_status(p) }}</td>
+                        <td class="c-go"><span class="row-go" aria-hidden="true">Detail{{ ui.icon('chevron-right') }}</span></td>
                     </tr>
                     {% endfor %}
                 </tbody>

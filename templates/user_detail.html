@@ -33,6 +33,7 @@
                     {% if person.country %}<span>{{ ui.icon('flag') }}{{ person.country }}</span>{% endif %}
                     {{ ui.activity_status(person) }}
                 </div>
+                {{ ui.badge_row(person, 10, 'lg') }}
             </div>
             <div class="profile__actions">
                 {{ ui.refresh_button(url_for('refresh_user', username=person.username)) }}
@@ -73,7 +74,7 @@
             <div class="path {{ 'path--done' if cert }}">
                 <span class="path__icon">{{ ui.icon('check' if cert else 'route') }}</span>
                 <div>
-                    <p class="path__title">{{ cert.title if cert else title }}</p>
+                    <p class="path__title">{{ cert | cert_title if cert else title }}</p>
                     <p class="path__meta">{{ 'Selesai ' ~ (cert.achieved | wib) if cert else 'Belum selesai' }}</p>
                 </div>
             </div>
@@ -82,7 +83,7 @@
             <div class="path path--done">
                 <span class="path__icon">{{ ui.icon('check') }}</span>
                 <div>
-                    <p class="path__title">{{ cert.title or cert.name }}</p>
+                    <p class="path__title">{{ cert | cert_title }}</p>
                     <p class="path__meta">Selesai {{ cert.achieved | wib }}</p>
                 </div>
             </div>

@@ -6,10 +6,13 @@
     <title>{% block title %}Learning Progress{% endblock %} · Visionet L2 Bootcamp</title>
     <meta name="description" content="Progress belajar TryHackMe peserta Visionet L2 Bootcamp.">
     <link rel="icon" href="{{ url_for('static', filename='favicon.svg') }}" type="image/svg+xml">
+    <link rel="icon" href="{{ url_for('static', filename='favicon-32.png') }}" sizes="32x32" type="image/png">
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='apple-touch-icon.png') }}">
+    <meta name="theme-color" content="#EA580C">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}?v=2">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}?v=3">
 </head>
 <body>
     <a class="skip-link" href="#main">Langsung ke konten</a>
@@ -26,13 +29,16 @@
         <symbol id="i-external" viewBox="0 0 24 24"><path d="M14 4h6v6"/><path d="M20 4 10 14"/><path d="M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></symbol>
         <symbol id="i-flag" viewBox="0 0 24 24"><path d="M5 21V4"/><path d="M5 4h12l-2 4 2 4H5"/></symbol>
         <symbol id="i-inbox" viewBox="0 0 24 24"><path d="M3 13h5l1 3h6l1-3h5"/><path d="M5 5h14l2 8v6H3v-6l2-8z"/></symbol>
+        <symbol id="i-chevron-right" viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></symbol>
+        <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+        <symbol id="i-pointer" viewBox="0 0 24 24"><path d="M9 3v10l-3-2-2 2 6 7h8l1-8-6-2V3a2 2 0 0 0-4 0z"/></symbol>
         <symbol id="i-route" viewBox="0 0 24 24"><circle cx="6" cy="19" r="2"/><circle cx="18" cy="5" r="2"/><path d="M8 19h7a3 3 0 0 0 0-6H9a3 3 0 0 1 0-6h7"/></symbol>
     </svg>
 
     <header class="app-header">
         <div class="container app-header__inner">
             <a class="brand" href="{{ url_for('index') }}">
-                <span class="brand__mark" aria-hidden="true">L2</span>
+                <img class="brand__mark" src="{{ url_for('static', filename='logo-mark.svg') }}" alt="" width="36" height="36">
                 <span>
                     <span class="brand__title">Learning Progress</span><br>
                     <span class="brand__sub">Visionet L2 Bootcamp · TryHackMe</span>
@@ -67,6 +73,6 @@
 
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
     <div class="tooltip" id="tooltip" hidden></div>
-    <script src="{{ url_for('static', filename='js/app.js') }}?v=2" defer></script>
+    <script src="{{ url_for('static', filename='js/app.js') }}?v=3" defer></script>
 </body>
 </html>

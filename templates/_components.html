@@ -44,9 +44,9 @@
 {% elif person.active %}
 <span class="tag tag--success">{{ icon('check') }}Aktif</span>
 {% elif person.days_idle is none %}
-<span class="tag tag--warning">{{ icon('alert') }}Belum pernah aktif</span>
+<span class="tag">{{ icon('clock') }}Belum ada aktivitas</span>
 {% else %}
-<span class="tag tag--warning" title="Aktivitas terakhir {{ person.days_idle }} hari lalu">{{ icon('alert') }}Idle {{ person.days_idle }} hari</span>
+<span class="tag" title="Aktivitas terakhir {{ person.days_idle }} hari lalu">{{ icon('clock') }}Idle {{ person.days_idle }} hari</span>
 {% endif %}
 {%- endmacro %}
 
@@ -74,4 +74,13 @@
     {% if n %}<span class="diff__bars" aria-hidden="true">{% for i in range(1, 4) %}<i class="{{ 'on' if i <= n else '' }}"></i>{% endfor %}</span>{% endif %}
     {{ (level or 'Info') | capitalize }}
 </span>
+{%- endmacro %}
+
+{% macro badge_row(person, limit=6, size='sm') -%}
+{% if person.badges %}
+<span class="badge-row badge-row--{{ size }}" aria-label="{{ person.badges | length }} badge">
+    {% for b in person.badges[:limit] %}<img src="{{ b.image }}" alt="{{ b.title }}" title="{{ b.title }}" loading="lazy">{% endfor %}
+    {% if person.badges | length > limit %}<span class="badge-row__more">+{{ person.badges | length - limit }}</span>{% endif %}
+</span>
+{% endif %}
 {%- endmacro %}

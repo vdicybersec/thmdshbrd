@@ -6,7 +6,7 @@ import sys
 import time
 
 import requests
-from flask import Flask, jsonify, render_template
+from flask import Flask, jsonify, redirect, render_template, url_for
 
 app = Flask(__name__)
 
@@ -188,6 +188,17 @@ def wib_filter(iso, fmt='%d %b %Y'):
     return _fmt_wib(iso, fmt) or ''
 
 
+@app.template_filter('cert_title')
+def cert_title_filter(cert):
+    """Certificates sometimes come without a title, only a slug like 'pathway-introtocyber'."""
+    if cert.get('title'):
+        return cert['title']
+    slug = (cert.get('name') or '').removeprefix('pathway-')
+    known = {'introtocyber': 'Intro to Cyber Security', 'presecurity': 'Pre Security',
+             'soclevel1': 'SOC Level 1', 'soclevel2': 'SOC Level 2', 'cybersecurity101': 'Cyber Security 101'}
+    return known.get(slug, slug.replace('-', ' ').title() or 'Learning path')
+
+
 @app.template_filter('thousands')
 def thousands_filter(n):
     if n is None:
@@ -198,6 +209,11 @@ def thousands_filter(n):
 
 
 # --------------------------------------------------------------------------- routes
+
+@app.route('/favicon.ico')
+def favicon():
+    return redirect(url_for('static', filename='favicon-32.png'), code=301)
+
 
 @app.route('/')
 def index():

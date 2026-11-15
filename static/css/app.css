@@ -1,7 +1,8 @@
 /* ==========================================================================
    THM Dashboard design system
-   - Palette: monochromatic blue (primary + sequential data ramp) on warm neutrals.
-     Hue is reserved for meaning: primary = action/data magnitude, green/amber/red = status.
+   - Palette: white + one orange hue (brand, action, data magnitude) on warm neutrals.
+     Bright oranges (400-600) only on large marks; text/buttons use 700+ for WCAG AA.
+     Other hues are reserved for status: green = done, yellow = warning, red = error.
    - 4px base grid (spacing tokens are multiples of 4, layout steps of 8).
    - Light + dark via prefers-color-scheme, every color through a semantic token.
    ========================================================================== */
@@ -20,20 +21,20 @@
   --neutral-900: #1c1b19;
   --neutral-950: #121211;
 
-  --blue-50: #eef5fd;
-  --blue-100: #cde2fb;
-  --blue-200: #9ec5f4;
-  --blue-300: #6da7ec;
-  --blue-400: #3987e5;
-  --blue-500: #256abf;
-  --blue-600: #1c5cab;
-  --blue-700: #184f95;
-  --blue-800: #104281;
-  --blue-900: #0d366b;
-  --blue-950: #0a2547;
+  --orange-50: #fff7ed;
+  --orange-100: #ffedd5;
+  --orange-200: #fed7aa;
+  --orange-300: #fdba74;
+  --orange-400: #fb923c;
+  --orange-500: #f97316;
+  --orange-600: #ea580c;
+  --orange-700: #c2410c;   /* 5.18:1 on white - lightest orange allowed for text/buttons */
+  --orange-800: #9a3412;
+  --orange-900: #7c2d12;
+  --orange-950: #431407;
 
   /* ---- Semantic tokens (light) ---------------------------------------- */
-  --bg: var(--neutral-100);
+  --bg: var(--neutral-50);
   --surface: #ffffff;
   --surface-sunken: var(--neutral-50);
   --surface-hover: var(--neutral-50);
@@ -43,28 +44,28 @@
   --border: var(--neutral-200);
   --border-strong: var(--neutral-300);
 
-  --primary: var(--blue-700);         /* 8.1:1 on surface */
-  --primary-hover: var(--blue-800);
+  --primary: var(--orange-700);       /* 5.18:1 on surface */
+  --primary-hover: var(--orange-800);
   --primary-fg: #ffffff;
-  --primary-soft: var(--blue-50);
-  --primary-soft-fg: var(--blue-800);
-  --focus-ring: var(--blue-400);
+  --primary-soft: var(--orange-50);
+  --primary-soft-fg: var(--orange-800);
+  --focus-ring: var(--orange-500);
 
   --success: #1a7f37;  --success-soft: #e7f4ea;  --success-fg: #155d2a;
-  --warning: #9a6700;  --warning-soft: #fdf3dc;  --warning-fg: #7a5200;
+  --warning: #a16207;  --warning-soft: #fef9c3;  --warning-fg: #713f12;
   --error:   #b42318;  --error-soft:   #fbeae8;  --error-fg:   #912018;
   --info: var(--primary); --info-soft: var(--primary-soft); --info-fg: var(--primary-soft-fg);
 
   /* Sequential activity ramp (one hue, light -> dark); level 0 = no activity */
   --heat-0: var(--neutral-200);
-  --heat-1: #86b6ef;   /* validated ordinal ramp: light end 2.11:1 on surface */
-  --heat-2: var(--blue-400);
-  --heat-3: var(--blue-600);
-  --heat-4: var(--blue-900);
+  --heat-1: var(--orange-400);   /* validated ordinal ramp: light end 2.26:1 on surface */
+  --heat-2: var(--orange-600);
+  --heat-3: var(--orange-700);
+  --heat-4: var(--orange-900);
   --heat-future: transparent;
 
   --meter-track: var(--neutral-200);
-  --meter-fill: var(--blue-500);
+  --meter-fill: var(--orange-500);
 
   /* ---- Typography ------------------------------------------------------ */
   --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
@@ -107,26 +108,26 @@
     --border: var(--neutral-800);
     --border-strong: var(--neutral-700);
 
-    --primary: var(--blue-300);
-    --primary-hover: var(--blue-200);
+    --primary: var(--orange-400);
+    --primary-hover: var(--orange-300);
     --primary-fg: var(--neutral-950);
-    --primary-soft: #14263d;
-    --primary-soft-fg: var(--blue-200);
-    --focus-ring: var(--blue-300);
+    --primary-soft: #2f1a0e;
+    --primary-soft-fg: var(--orange-300);
+    --focus-ring: var(--orange-400);
 
     --success: #4ac26b;  --success-soft: #16291c;  --success-fg: #7ad693;
-    --warning: #d4a72c;  --warning-soft: #2e2510;  --warning-fg: #e3c063;
+    --warning: #eab308;  --warning-soft: #2b260c;  --warning-fg: #fde047;
     --error:   #f47067;  --error-soft:   #331a18;  --error-fg:   #f8a29c;
 
     /* Dark ramp: dim -> bright, its own steps (not an inverted light ramp) */
     --heat-0: var(--neutral-800);
-    --heat-1: var(--blue-700);   /* validated: dark end 2.12:1 on dark surface */
-    --heat-2: #2a78d6;
-    --heat-3: var(--blue-300);
-    --heat-4: #b7d3f6;
+    --heat-1: var(--orange-800);   /* validated: dark end 2.36:1 on dark surface */
+    --heat-2: var(--orange-700);
+    --heat-3: var(--orange-500);
+    --heat-4: var(--orange-300);
 
     --meter-track: var(--neutral-800);
-    --meter-fill: var(--blue-400);
+    --meter-fill: var(--orange-500);
     --shadow-1: none;
     --shadow-pop: 0 4px 16px rgb(0 0 0 / 0.5);
     color-scheme: dark;
@@ -178,8 +179,7 @@ p { margin: 0; }
   flex-wrap: wrap; padding-block: var(--space-3); }
 .brand { display: flex; align-items: center; gap: var(--space-3); color: var(--fg); margin-right: auto; }
 .brand:hover { text-decoration: none; }
-.brand__mark { width: 32px; height: 32px; border-radius: var(--radius-md); background: var(--primary);
-  color: var(--primary-fg); display: grid; place-items: center; font-weight: 700; font-size: var(--text-sm); }
+.brand__mark { width: 36px; height: 36px; flex: none; }
 .brand__title { font-weight: 600; font-size: var(--text-md); }
 .brand__sub { font-size: var(--text-xs); color: var(--fg-muted); }
 .header-actions { display: flex; align-items: center; gap: var(--space-3); }
@@ -442,4 +442,34 @@ tr:hover .person__name { color: var(--primary); }
   .table[data-sortable] .c-status { grid-area: status; justify-self: end; }
   .person { min-width: 0; }
   .toolbar .input { max-width: none; flex-basis: 100%; }
+}
+
+/* Badge row under a name: "character card" feel, kept small so it supports, not competes */
+.badge-row { display: flex; align-items: center; gap: 2px; margin-top: var(--space-1); }
+.badge-row img { width: 20px; height: 20px; object-fit: contain; }
+.badge-row--lg { gap: var(--space-1); margin-top: var(--space-3); flex-wrap: wrap; }
+.badge-row--lg img { width: 32px; height: 32px; }
+.badge-row--lg .badge-row__more { font-size: var(--text-xs); }
+.badge-row__more { font-size: 11px; color: var(--fg-subtle); margin-left: var(--space-1); font-variant-numeric: tabular-nums; }
+
+/* Clickable-row affordance: hint text + hover accent + trailing "Detail >" */
+.table-hint { display: flex; align-items: center; gap: var(--space-2); padding: var(--space-2) var(--space-4);
+  font-size: var(--text-xs); color: var(--fg-subtle); border-bottom: 1px solid var(--border); background: var(--surface-sunken); }
+.table-hint .icon { width: 14px; height: 14px; }
+.table tr[data-href] td:first-child { box-shadow: inset 3px 0 0 transparent; transition: box-shadow var(--transition); }
+.table tr[data-href]:hover td:first-child { box-shadow: inset 3px 0 0 var(--primary); }
+.table tr[data-href]:hover { background: var(--primary-soft); }
+.c-go { width: 1%; white-space: nowrap; }
+.row-go { display: inline-flex; align-items: center; gap: 2px; color: var(--fg-subtle); font-size: var(--text-xs); font-weight: 500;
+  transition: color var(--transition), transform var(--transition); }
+tr[data-href]:hover .row-go { color: var(--primary); transform: translateX(2px); }
+.person__name { text-decoration: underline; text-decoration-color: transparent; text-underline-offset: 3px;
+  transition: text-decoration-color var(--transition), color var(--transition); }
+tr:hover .person__name { text-decoration-color: currentColor; }
+@media (max-width: 599px) {
+  .table[data-sortable] tbody tr { grid-template-columns: 24px minmax(0, 1fr) auto 16px;
+    grid-template-areas: "pos person rooms go" "pos soc status go"; }
+  .table[data-sortable] .c-go { grid-area: go; width: auto; }
+  .row-go { font-size: 0; }
+  .row-go .icon { width: 16px; height: 16px; }
 }
