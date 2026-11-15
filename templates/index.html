@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% import '_components.html' as ui %}
 
-{% block title %}Ringkasan Tim{% endblock %}
+{% block title %}Ringkasan{% endblock %}
 
 {% block header_actions %}
     {{ ui.sync_status(sync) }}
@@ -10,35 +10,192 @@
 
 {% block content %}
 <div class="stack">
-    <section aria-labelledby="summary-title">
-        <div class="section-head">
-            <div>
-                <h1 id="summary-title" class="section-title">Ringkasan tim</h1>
-                <p class="section-desc">{{ summary.total }} peserta · progress TryHackMe dan jalur SOC</p>
+    {% set pg = program %}
+    <section class="card card__body program" aria-labelledby="program-title">
+        <div class="program__main">
+            <p class="eyebrow">{{ pg.period }}</p>
+            <h1 id="program-title" class="section-title">{{ pg.name }}</h1>
+            <p class="section-desc">
+                {% if not pg.started %}Dimulai {{ cur.start | idate('long') }}
+                {% elif pg.finished %}Program selesai
+                {% else %}Hari kerja ke-<span class="num">{{ pg.done_days }}</span> dari {{ pg.total_days }} selesai{% if pg.part %} · Part {{ pg.part.part }}: {{ pg.part.title }}{% endif %}{% endif %}
+            </p>
+            <div class="timebar" role="img" aria-label="{{ pg.done_days }} dari {{ pg.total_days }} hari kerja berlalu">
+                {% for d in cur.days %}<span class="timebar__day timebar__day--p{{ d.part }}{{ ' is-past' if d.date < pg.today_date }}{{ ' is-today' if d.date == pg.today_date }}" data-tip="H{{ '%02d' % d.h }} · {{ d.date | idate }}{{ ' · EM' if d.em }} · {{ d.sections | join(', ') }}"></span>{% endfor %}
             </div>
+            <div class="timebar__legend"><span>Part 1 · {{ cur.parts[0].start | idate }} – {{ cur.parts[0].end | idate }}</span><span>Part 2 · {{ cur.parts[1].start | idate }} – {{ cur.parts[1].end | idate }}</span></div>
         </div>
-        <div class="stats">
-            {{ ui.stat('Aktif 7 hari terakhir', summary.active, meta=(summary.total - summary.active) ~ ' peserta belum ada aktivitas minggu ini', suffix='/ ' ~ summary.total) }}
-            {{ ui.stat('Room diselesaikan', summary.rooms_total | thousands, meta='Rata-rata ' ~ summary.rooms_avg ~ ' room per peserta') }}
-            {{ ui.stat('SOC Level 1 selesai', summary.soc_l1, meta='Sertifikat jalur SOC L1', suffix='/ ' ~ summary.total) }}
-            {{ ui.stat('SOC Level 2 selesai', summary.soc_l2, meta='Sertifikat jalur SOC L2', suffix='/ ' ~ summary.total) }}
+        <div class="program__side">
+            {% if pg.next_day %}
+            <div class="next">
+                <p class="next__label">{{ 'Hari ini' if pg.is_today else 'Sesi berikutnya' }} · {{ pg.next_day.date | idate('long') }}</p>
+                <p class="next__title">H{{ '%02d' % pg.next_day.h }}{% if pg.next_day.em %} <span class="em" title="Evaluation Meeting">EM</span>{% endif %}
+                    · {{ pg.next_day.rooms }} room · {{ pg.next_day.output }}</p>
+                <ul class="next__list">{% for s in pg.next_day.section_list %}<li><span class="code">{{ s.code }}</span> {{ s.title }}</li>{% endfor %}</ul>
+            </div>
+            {% endif %}
+            {% if pg.milestone %}
+            <div class="next">
+                <p class="next__label">Milestone berikutnya</p>
+                <p class="next__title">{{ pg.milestone.code }} · {{ pg.milestone.name }}</p>
+                <p class="next__meta">{{ pg.milestone.date | idate('long') }} · {{ cur.working_days(pg.today_date, pg.milestone.date) }} hari kerja lagi · {{ pg.milestone.criteria }}</p>
+            </div>
+            {% endif %}
         </div>
     </section>
 
+    <section aria-label="Ringkasan tim">
+        <div class="stats">
+            {{ ui.stat('Sesuai jadwal', team.status.ok, meta=(team.status.warning + team.status.critical) ~ ' peserta perlu mengejar', suffix='/ ' ~ summary.total) }}
+            {{ ui.stat('Rata-rata room kurikulum', team.avg_done, meta=((team.avg_pct * 100) | round | int) ~ '% dari ' ~ cur.total ~ ' room', suffix='/ ' ~ cur.total) }}
+            {{ ui.stat('Jadwal s.d. hari ini', pg.planned, meta='Room yang seharusnya sudah selesai', suffix='room') }}
+            {{ ui.stat('Aktif 7 hari terakhir', summary.active, meta='Ada aktivitas di TryHackMe', suffix='/ ' ~ summary.total) }}
+        </div>
+    </section>
+
+    <section class="card card__body" aria-labelledby="week-title">
+        <div class="section-head">
+            <div>
+                <h2 id="week-title" class="section-title">{{ 'Minggu ini' if pg.today_date.weekday() < 5 else 'Minggu depan' }}</h2>
+                <p class="section-desc">Jadwal harian dari kurikulum · EM = Evaluation Meeting (Senin dan Jumat)</p>
+            </div>
+            <a class="btn btn--secondary" href="{{ url_for('curriculum_page') }}">{{ ui.icon('calendar') }}Kalender lengkap</a>
+        </div>
+        <div class="weekplan">
+            {% for w in pg.week %}
+            <div class="day{{ ' day--today' if w.today }}{{ ' day--past' if w.past }}{{ ' day--holiday' if w.holiday }}{% if w.day %} day--p{{ w.day.part }}{% endif %}">
+                <div class="day__head">
+                    <span class="day__date">{{ w.date | idate('day') }}, {{ w.date | idate }}</span>
+                    {% if w.day %}<span class="day__h">H{{ '%02d' % w.day.h }}{% if w.day.em %} <span class="em">EM</span>{% endif %}</span>{% endif %}
+                </div>
+                {% if w.day %}
+                <ul class="day__sections">{% for s in w.day.section_list %}<li><span class="code">{{ s.code }}</span> {{ s.title }}</li>{% endfor %}</ul>
+                <p class="day__meta">{{ w.day.rooms }} room · {{ w.day.output }}</p>
+                {% elif w.holiday %}<p class="day__meta">{{ w.holiday }}</p>
+                {% else %}<p class="day__meta">Tidak ada sesi</p>{% endif %}
+                {% if w.today %}<span class="day__badge">Hari ini</span>{% endif %}
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+
+    <section aria-labelledby="catchup-title">
+        <div class="section-head">
+            <div>
+                <h2 id="catchup-title" class="section-title">Target catch-up per peserta</h2>
+                <p class="section-desc">Hanya room kurikulum yang dihitung (judul room dicocokkan dengan profil TryHackMe). Yang paling tertinggal tampil lebih dulu.</p>
+            </div>
+            {{ ui.burnup_legend(None) }}
+        </div>
+        <div class="catchup">
+            {% for p in catchup %}{% set c = p.cur %}
+            <a class="card catchup__card" href="{{ url_for('user_detail', username=p.username) }}">
+                <div class="catchup__head">
+                    {{ ui.avatar(p) }}
+                    <div class="catchup__who">
+                        <span class="person__name">{{ p.name }}</span>
+                        <span class="person__user">@{{ p.username }}</span>
+                    </div>
+                    {{ ui.cur_status(c) }}
+                </div>
+                <p class="catchup__big"><span class="num">{{ c.done }}</span><small> / {{ c.total }} room kurikulum</small></p>
+                {{ ui.cur_bullet(c, cur) }}
+                <dl class="catchup__facts">
+                    {% if c.milestone %}
+                    <div>
+                        <dt>Kejar {{ c.milestone.code }} · {{ c.milestone.date | idate }}</dt>
+                        <dd>{% if c.milestone.need %}<strong>{{ c.milestone.pace }} room/hari</strong><span>{{ c.milestone.need }} room dalam {{ c.milestone.days_left }} hari kerja</span>{% else %}<strong>Tercapai</strong><span>Semua room sampai {{ c.milestone.code }} selesai</span>{% endif %}</dd>
+                    </div>
+                    {% endif %}
+                    <div>
+                        <dt>Selesai {{ cur.end | idate }}</dt>
+                        <dd><strong>{{ c.pace_end }} room/hari</strong><span>{{ c.remaining }} room dalam {{ c.days_left_end }} hari kerja</span></dd>
+                    </div>
+                    <div>
+                        <dt>Posisi</dt>
+                        <dd>{% if c.frontier %}<strong><span class="code">{{ c.frontier.code }}</span> {{ c.frontier.title }}</strong><span>{{ c.frontier.done }}/{{ c.frontier.total }} room · jadwal sekarang di {{ c.scheduled }}</span>{% else %}<strong>Semua section selesai</strong>{% endif %}</dd>
+                    </div>
+                    <div>
+                        <dt>Perkiraan selesai</dt>
+                        <dd>{% if not c.projection %}<strong>–</strong><span>Belum cukup data</span>{% elif c.projection.late %}<strong class="text-error">Lewat {{ cur.end | idate }}</strong><span>dengan rata-rata {{ '%.1f' | format(c.pace_now) }} room/hari</span>{% else %}<strong>{{ c.projection.date | idate }}</strong><span>dengan rata-rata {{ '%.1f' | format(c.pace_now) }} room/hari</span>{% endif %}</dd>
+                    </div>
+                </dl>
+                {{ ui.burnup_chart(p.chart, 'Rencana vs realisasi room kurikulum ' ~ p.name) }}
+                <span class="catchup__go">Lihat detail{{ ui.icon('chevron-right') }}</span>
+            </a>
+            {% endfor %}
+        </div>
+    </section>
+
+    <div class="grid-2">
+        <section class="card card__body" aria-labelledby="matrix-title">
+            <div class="section-head">
+                <div>
+                    <h2 id="matrix-title" class="section-title">Progres per section</h2>
+                    <p class="section-desc">Persentase room selesai di tiap section. Garis oranye = section yang dijadwalkan sekarang.</p>
+                </div>
+            </div>
+            <div class="table-wrap">
+                <table class="matrix">
+                    <thead>
+                        <tr><th scope="col"><span class="sr-only">Peserta</span></th>
+                            {% for s in team.sections %}<th scope="col" class="{{ 'is-current' if s.current }}{{ ' is-due' if s.due }}{{ ' part-start' if s.code == 'P2-S01' }}" data-tip="{{ s.code }} {{ s.title }} · {{ s.start | idate }}–{{ s.end | idate }}">{{ s.code[1] }}.{{ s.code[-2:] | int }}</th>{% endfor %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for p in people %}
+                        <tr>
+                            <th scope="row"><a href="{{ url_for('user_detail', username=p.username) }}">{{ p.name }}</a></th>
+                            {% for s in p.cur.sections %}
+                            <td class="{{ 'is-current' if team.sections[loop.index0].current }}{{ ' part-start' if s.code == 'P2-S01' }}"><span class="matrix__cell" data-level="{{ ui.section_level(s) }}" data-tip="{{ p.name }} · {{ s.code }} {{ s.title }}: {{ s.done }}/{{ s.total }} room"><span class="sr-only">{{ s.done }} dari {{ s.total }}</span></span></td>
+                            {% endfor %}
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <div class="heatmap-foot">
+                <span class="subtle" style="font-size: var(--text-xs)">Kolom: P1.1 = P1-S01. Arahkan kursor untuk detail.</span>
+                <span class="legend">0%{% for l, t in [(0, '0%'), (1, '1–33%'), (2, '34–66%'), (3, '67–99%'), (4, '100%')] %}<span class="matrix__cell" data-level="{{ l }}" data-tip="{{ t }}"></span>{% endfor %}100%</span>
+            </div>
+        </section>
+
+        <section class="card card__body" aria-labelledby="ms-title">
+            <div class="section-head">
+                <div>
+                    <h2 id="ms-title" class="section-title">Milestone</h2>
+                    <p class="section-desc">Jumlah peserta yang memenuhi kriteria tiap milestone</p>
+                </div>
+            </div>
+            <ol class="milestones">
+                {% for m in team.milestones %}
+                <li class="milestone{{ ' milestone--past' if m.past }}{{ ' milestone--next' if m.next }}">
+                    <span class="milestone__code">{{ m.code }}</span>
+                    <div class="milestone__body">
+                        <p class="milestone__name">{{ m.name }}</p>
+                        <p class="milestone__meta">{{ m.date | idate('long') }} · {{ m.criteria }}</p>
+                    </div>
+                    <span class="milestone__count{{ ' text-error' if m.past and m.missed }}" title="{{ m.done }} dari {{ people | length }} peserta">{{ m.done }}/{{ people | length }}</span>
+                </li>
+                {% endfor %}
+            </ol>
+        </section>
+    </div>
+
     <section class="card" aria-labelledby="board-title" data-board>
         <div class="toolbar">
-            <h2 id="board-title" class="sr-only">Leaderboard peserta</h2>
+            <h2 id="board-title" class="section-title">Semua peserta</h2>
             <label class="input">
                 {{ ui.icon('search') }}
                 <span class="sr-only">Cari peserta</span>
                 <input type="search" placeholder="Cari nama atau username" data-search autocomplete="off">
             </label>
             {% set idle = people | rejectattr('active') | list | length %}
-            {% set no_l1 = people | selectattr('soc.l1', 'none') | list | length %}
+            {% set behind = people | rejectattr('cur.status', 'equalto', 'ok') | list | length %}
             <div class="segmented" role="group" aria-label="Filter peserta">
                 <button type="button" aria-pressed="true" data-filter="all">Semua<span class="count">{{ people | length }}</span></button>
                 <button type="button" aria-pressed="false" data-filter="idle">Tidak aktif<span class="count">{{ idle }}</span></button>
-                <button type="button" aria-pressed="false" data-filter="no-l1">Belum SOC L1<span class="count">{{ no_l1 }}</span></button>
+                <button type="button" aria-pressed="false" data-filter="behind">Tertinggal<span class="count">{{ behind }}</span></button>
             </div>
             <span class="toolbar__end"><span data-result-count aria-live="polite"></span></span>
         </div>
@@ -51,11 +208,11 @@
                     <tr>
                         <th scope="col" class="pos" aria-sort="ascending"><button type="button" data-sort="position" data-type="num">#{{ ui.icon('sort', 'icon sort-icon') }}</button></th>
                         <th scope="col" aria-sort="none"><button type="button" data-sort="name" data-type="text">Peserta{{ ui.icon('sort', 'icon sort-icon') }}</button></th>
-                        <th scope="col" aria-sort="none"><button type="button" data-sort="rooms" data-type="num">Room selesai{{ ui.icon('sort', 'icon sort-icon') }}</button></th>
+                        <th scope="col" aria-sort="none"><button type="button" data-sort="cur" data-type="num">Kurikulum{{ ui.icon('sort', 'icon sort-icon') }}</button></th>
+                        <th scope="col" class="right col-optional" aria-sort="none"><button type="button" data-sort="rooms" data-type="num">Total room{{ ui.icon('sort', 'icon sort-icon') }}</button></th>
                         <th scope="col" class="right col-optional" aria-sort="none"><button type="button" data-sort="badges" data-type="num">Badge{{ ui.icon('sort', 'icon sort-icon') }}</button></th>
                         <th scope="col" class="right col-optional" aria-sort="none"><button type="button" data-sort="points" data-type="num">Poin{{ ui.icon('sort', 'icon sort-icon') }}</button></th>
                         <th scope="col" aria-sort="none"><button type="button" data-sort="weekly" data-type="num">7 hari terakhir{{ ui.icon('sort', 'icon sort-icon') }}</button></th>
-                        <th scope="col">Jalur SOC</th>
                         <th scope="col" aria-sort="none"><button type="button" data-sort="idle" data-type="num">Status{{ ui.icon('sort', 'icon sort-icon') }}</button></th>
                         <th scope="col" class="c-go"><span class="sr-only">Detail</span></th>
                     </tr>
@@ -64,9 +221,9 @@
                     {% for p in people %}
                     <tr data-href="{{ url_for('user_detail', username=p.username) }}"
                         data-position="{{ p.position }}" data-name="{{ p.name | lower }}" data-username="{{ p.username | lower }}"
-                        data-rooms="{{ p.rooms }}" data-badges="{{ p.badges_number }}" data-points="{{ p.points }}"
+                        data-rooms="{{ p.rooms }}" data-cur="{{ p.cur.done }}" data-badges="{{ p.badges_number }}" data-points="{{ p.points }}"
                         data-weekly="{{ p.weekly }}" data-idle="{{ -1 if p.active else (p.days_idle if p.days_idle is not none else 9999) }}"
-                        data-is-idle="{{ 'false' if p.active else 'true' }}" data-no-l1="{{ 'false' if p.soc.l1 else 'true' }}">
+                        data-is-idle="{{ 'false' if p.active else 'true' }}" data-behind="{{ 'false' if p.cur.status == 'ok' else 'true' }}">
                         <td class="pos c-pos">{{ p.position }}</td>
                         <td class="c-person">
                             <div class="person">
@@ -79,15 +236,16 @@
                             </div>
                         </td>
                         <td class="c-rooms">
-                            <div class="meter" title="{{ p.rooms }} room">
-                                <span class="meter__value">{{ p.rooms }}</span>
-                                <span class="meter__track" aria-hidden="true"><span class="meter__fill" style="width: {{ (p.rooms / summary.max_rooms * 100) | round(1) }}%"></span></span>
+                            <div class="meter" title="{{ p.cur.done }} dari {{ p.cur.total }} room kurikulum">
+                                <span class="meter__value">{{ p.cur.done }}</span>
+                                <span class="meter__track" aria-hidden="true"><span class="meter__fill" style="width: {{ (p.cur.pct * 100) | round(1) }}%"></span></span>
                             </div>
+                            <div class="meter__sub">{{ ui.cur_status(p.cur) }}</div>
                         </td>
+                        <td class="right num col-optional">{{ p.rooms }}</td>
                         <td class="right num col-optional">{{ p.badges_number }}</td>
                         <td class="right num col-optional">{{ p.points | thousands }}</td>
                         <td class="c-week">{{ ui.week_strip(p) }}</td>
-                        <td class="c-soc">{{ ui.soc_tags(p.soc) }}</td>
                         <td class="c-status">{{ ui.activity_status(p) }}</td>
                         <td class="c-go"><span class="row-go" aria-hidden="true">Detail{{ ui.icon('chevron-right') }}</span></td>
                     </tr>

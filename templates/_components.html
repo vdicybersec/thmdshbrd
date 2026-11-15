@@ -84,3 +84,65 @@
 </span>
 {% endif %}
 {%- endmacro %}
+
+{# ---------------------------------------------------------------- curriculum #}
+
+{% macro cur_status(c) -%}
+{% if c.status == 'ok' %}
+<span class="tag tag--success">{{ icon('check') }}{% if c.behind < 0 %}Unggul {{ -c.behind }} room{% else %}Sesuai jadwal{% endif %}</span>
+{% elif c.status == 'warning' %}
+<span class="tag tag--warning">{{ icon('clock') }}Tertinggal {{ c.behind }} room</span>
+{% else %}
+<span class="tag tag--error">{{ icon('alert') }}Tertinggal {{ c.behind }} room</span>
+{% endif %}
+{%- endmacro %}
+
+{# Bullet bar: fill = rooms done, marker = where the schedule says they should be. Scale = next milestone. #}
+{% macro cur_bullet(c, cur) -%}
+{% set scale = c.milestone.total if c.milestone else c.total %}
+{% set fill = [c.done / scale * 100, 100] | min %}
+{% set mark = [c.expected / scale * 100, 100] | min %}
+<div class="bullet" role="img" aria-label="{{ c.done }} room kurikulum selesai, jadwal {{ c.expected }}{% if c.milestone %}, target {{ c.milestone.code }} {{ scale }} room{% endif %}">
+    <div class="bullet__track">
+        <span class="bullet__fill bullet__fill--{{ c.status }}" style="width: {{ fill | round(1) }}%"></span>
+        {% if c.expected %}<span class="bullet__mark" style="left: {{ mark | round(1) }}%" data-tip="Jadwal s.d. hari ini: {{ c.expected }} room"></span>{% endif %}
+    </div>
+    <div class="bullet__scale"><span>0</span>{% if c.milestone %}<span>{{ c.milestone.code }} · {{ scale }}</span>{% else %}<span>{{ scale }}</span>{% endif %}</div>
+</div>
+{%- endmacro %}
+
+{% macro burnup_chart(ch, label, large=False) -%}
+<svg class="burnup{{ ' burnup--lg' if large }}" viewBox="0 0 {{ ch.w }} {{ ch.h }}" role="img" aria-label="{{ label }}" preserveAspectRatio="none">
+    <line class="burnup__grid" x1="{{ ch.x_left }}" x2="{{ ch.x_right }}" y1="{{ ch.y_top }}" y2="{{ ch.y_top }}"/>
+    <line class="burnup__grid" x1="{{ ch.x_left }}" x2="{{ ch.x_right }}" y1="{{ ch.y_mid }}" y2="{{ ch.y_mid }}"/>
+    <line class="burnup__axis" x1="{{ ch.x_left }}" x2="{{ ch.x_right }}" y1="{{ ch.y_base }}" y2="{{ ch.y_base }}"/>
+    <text class="burnup__label" x="{{ ch.x_left - 4 }}" y="{{ ch.y_top + 4 }}" text-anchor="end">{{ ch.ymax }}</text>
+    <text class="burnup__label" x="{{ ch.x_left - 4 }}" y="{{ ch.y_mid + 4 }}" text-anchor="end">{{ ch.ymid }}</text>
+    <text class="burnup__label" x="{{ ch.x_left - 4 }}" y="{{ ch.y_base + 4 }}" text-anchor="end">0</text>
+    {% for m in ch.months %}<text class="burnup__label" x="{{ m.x }}" y="{{ ch.h - 4 }}">{{ m.label }}</text>{% endfor %}
+    {% if large %}{% for m in ch.milestones %}
+    <line class="burnup__ms" x1="{{ m.x }}" x2="{{ m.x }}" y1="{{ ch.y_top }}" y2="{{ ch.y_base }}"/>
+    <text class="burnup__label burnup__label--ms" x="{{ m.x }}" y="{{ ch.y_top - 2 }}" text-anchor="middle">{{ m.code }}</text>
+    {% endfor %}{% endif %}
+    {% if ch.today_x %}<line class="burnup__today" x1="{{ ch.today_x }}" x2="{{ ch.today_x }}" y1="{{ ch.y_top }}" y2="{{ ch.y_base }}"/>{% endif %}
+    <path class="burnup__plan" d="{{ ch.plan }}"/>
+    {% if ch.actual %}<path class="burnup__actual" d="{{ ch.actual }}"/>{% endif %}
+    {% if ch.last %}<circle class="burnup__dot" cx="{{ ch.last.x }}" cy="{{ ch.last.y }}" r="4"/>{% endif %}
+    {% for h in ch.hits %}<rect class="burnup__hit" x="{{ h.x }}" y="{{ ch.y_top }}" width="{{ h.w }}" height="{{ ch.y_base - ch.y_top }}" data-tip="{{ h.tip }}"/>{% endfor %}
+</svg>
+{%- endmacro %}
+
+{% macro burnup_legend(since) -%}
+<span class="legend legend--lines">
+    <span><i class="swatch-line swatch-line--plan"></i>Rencana kurikulum</span>
+    <span><i class="swatch-line swatch-line--actual"></i>Selesai{% if since %} (direkam sejak {{ since | idate }}){% endif %}</span>
+</span>
+{%- endmacro %}
+
+{% macro section_level(s) -%}{{ 0 if s.done == 0 else (4 if s.done == s.total else (1 if s.pct < 0.34 else (2 if s.pct < 0.67 else 3))) }}{%- endmacro %}
+
+{% macro milestone_chip(m) -%}
+<span class="ms-chip ms-chip--{{ m.state }}" title="{{ m.code }} {{ m.name }} · {{ m.date | idate }} · {{ {'done': 'tercapai', 'missed': 'terlewat', 'pending': 'belum'}[m.state] }}">
+    {%- if m.state == 'done' %}{{ icon('check') }}{% elif m.state == 'missed' %}{{ icon('alert') }}{% endif %}{{ m.code -}}
+</span>
+{%- endmacro %}

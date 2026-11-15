@@ -1,0 +1,138 @@
+{% extends 'base.html' %}
+{% import '_components.html' as ui %}
+
+{% block title %}Kurikulum{% endblock %}
+
+{% block header_actions %}
+    {{ ui.sync_status(sync) }}
+{% endblock %}
+
+{% block content %}
+<div class="stack">
+    <section class="section-head" aria-labelledby="cur-title">
+        <div>
+            <p class="eyebrow">{{ cur.period }}</p>
+            <h1 id="cur-title" class="section-title">Kalender pelaksanaan</h1>
+            <p class="section-desc">{{ cur.days | length }} hari efektif · {{ cur.sections | length }} section · {{ cur.total }} room · Senin–Jumat, hingga {{ cur.raw.hours_per_day }} jam/hari (minimum {{ cur.raw.hours_min_shift }} jam pada hari shift)</p>
+        </div>
+    </section>
+
+    <div class="cal-legend">
+        <span><i class="sw sw--p1"></i>Part 1 · {{ cur.parts[0].title }}</span>
+        <span><i class="sw sw--p2"></i>Part 2 · {{ cur.parts[1].title }}</span>
+        <span><i class="sw sw--weekend"></i>Sabtu dan Minggu</span>
+        <span><i class="sw sw--holiday"></i>Libur nasional</span>
+        <span><span class="em">EM</span> Evaluation Meeting</span>
+        <span><i class="sw sw--today"></i>Hari ini</span>
+    </div>
+
+    {% for month in months %}
+    <section class="card cal" aria-labelledby="m-{{ loop.index }}">
+        <div class="cal__head">
+            <h2 id="m-{{ loop.index }}" class="section-title">{{ month.first | idate('month') }}</h2>
+            {% if month.h_range %}<span class="subtle">H{{ '%02d' % month.h_range[0] }}–H{{ '%02d' % month.h_range[1] }}</span>{% endif %}
+        </div>
+        <div class="cal__scroll">
+            <div class="cal__grid">
+                {% for d in ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'] %}<div class="cal__dow">{{ d }}</div>{% endfor %}
+                {% for week in month.weeks %}{% for c in week %}
+                {% if not c %}<div class="cal__cell cal__cell--empty"></div>
+                {% else %}
+                <div class="cal__cell{{ ' cal__cell--weekend' if c.weekend }}{{ ' cal__cell--holiday' if c.holiday }}{{ ' cal__cell--today' if c.today }}{{ ' cal__cell--past' if c.past }}{% if c.day %} cal__cell--p{{ c.day.part }}{% endif %}">
+                    <div class="cal__top">
+                        <span class="cal__num">{{ c.date.day }}</span>
+                        {% if c.day %}<span class="cal__h">H{{ '%02d' % c.day.h }}{% if c.day.em %} <span class="em">EM</span>{% endif %}</span>{% endif %}
+                    </div>
+                    {% if c.day %}
+                    <ul class="cal__sections">{% for s in c.day.section_list %}<li><span class="code">{{ s.code }}</span> {{ s.title }}</li>{% endfor %}</ul>
+                    <p class="cal__meta">{{ c.day.rooms }} room · {{ c.day.output }}</p>
+                    {% elif c.holiday %}<p class="cal__holiday">{{ c.holiday }}</p>{% endif %}
+                </div>
+                {% endif %}
+                {% endfor %}{% endfor %}
+            </div>
+        </div>
+    </section>
+    {% endfor %}
+
+    <section class="card card__body" aria-labelledby="ms-title">
+        <div class="section-head">
+            <div>
+                <h2 id="ms-title" class="section-title">Milestone dan kontrol progres</h2>
+                <p class="section-desc">Status tiap peserta terhadap kriteria penerimaan milestone</p>
+            </div>
+        </div>
+        <div class="table-wrap">
+            <table class="table">
+                <thead><tr><th scope="col">Milestone</th><th scope="col">Tanggal</th><th scope="col" class="col-optional">Kriteria</th>
+                    {% for p in people %}<th scope="col" class="center">{{ p.name }}</th>{% endfor %}</tr></thead>
+                <tbody>
+                    {% for m in team.milestones %}{% set i = loop.index0 %}
+                    <tr{% if m.next %} class="is-next"{% endif %}>
+                        <td><strong>{{ m.code }}</strong> {{ m.name }}</td>
+                        <td class="nowrap">{{ m.date | idate }}</td>
+                        <td class="col-optional muted">{{ m.criteria }}</td>
+                        {% for p in people %}<td class="center">{{ ui.milestone_chip(p.cur.milestones[i]) }}</td>{% endfor %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <section aria-labelledby="sec-title">
+        <div class="section-head">
+            <div>
+                <h2 id="sec-title" class="section-title">Section dan room</h2>
+                <p class="section-desc">Klik section untuk melihat room dan siapa yang sudah menyelesaikannya</p>
+            </div>
+        </div>
+        {% for part in cur.parts %}
+        <h3 class="part-title part-title--p{{ part.part }}">Part {{ part.part }} · {{ part.title }} <span class="subtle">{{ part.start | idate }} – {{ part.end | idate }}</span></h3>
+        <div class="sections">
+            {% for s in cur.sections if s.part == part.part %}{% set si = loop.index0 + (0 if part.part == 1 else 14) %}
+            {% set ts = team.sections[cur.sections.index(s)] %}
+            <details class="card section-card{{ ' is-current' if ts.current }}">
+                <summary>
+                    <span class="code">{{ s.code }}</span>
+                    <span class="section-card__title">{{ s.title }}{% if ts.current %} <span class="tag tag--info">Jadwal sekarang</span>{% endif %}</span>
+                    <span class="section-card__meta">{{ s.start | idate }}{% if s.end != s.start %} – {{ s.end | idate }}{% endif %} · {{ s.rooms | length }} room</span>
+                    <span class="section-card__who">
+                        {% for p in people %}{% set ps = p.cur.sections[cur.sections.index(s)] %}
+                        <span class="matrix__cell" data-level="{{ ui.section_level(ps) }}" data-tip="{{ p.name }}: {{ ps.done }}/{{ ps.total }} room"><span class="sr-only">{{ p.name }} {{ ps.done }} dari {{ ps.total }}</span></span>
+                        {% endfor %}
+                    </span>
+                    {{ ui.icon('chevron-right', 'icon section-card__chev') }}
+                </summary>
+                <p class="section-card__desc">{{ s.desc }}</p>
+                <div class="table-wrap">
+                    <table class="table table--compact">
+                        <thead><tr><th scope="col">Room</th>{% for p in people %}<th scope="col" class="center">{{ p.name }}</th>{% endfor %}</tr></thead>
+                        <tbody>
+                            {% for r in s.rooms %}
+                            <tr>
+                                <td><span class="code">{{ r.code }}</span> {{ r.title }}</td>
+                                {% for p in people %}<td class="center">{% if r.code in p.cur.done_codes %}<span class="check" title="Selesai">{{ ui.icon('check') }}<span class="sr-only">Selesai</span></span>{% else %}<span class="dash" title="Belum">–<span class="sr-only">Belum</span></span>{% endif %}</td>{% endfor %}
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </details>
+            {% endfor %}
+        </div>
+        {% endfor %}
+    </section>
+
+    <section class="card card__body" aria-labelledby="how-title">
+        <h2 id="how-title" class="section-title">Cara membaca angka di dashboard</h2>
+        <ul class="notes">
+            <li><strong>Jadwal s.d. hari ini</strong> = jumlah room yang dijadwalkan pada hari kerja sebelum hari ini (beban hari ini belum dihitung).</li>
+            <li><strong>Tertinggal / unggul</strong> = jadwal s.d. hari ini dikurangi room kurikulum yang sudah selesai. Kuning: tertinggal 1–4 room, merah: 5 room atau lebih (≈ satu hari kerja).</li>
+            <li><strong>Kejar milestone</strong> = semua room yang dijadwalkan sampai milestone berikutnya yang belum selesai, dibagi hari kerja tersisa (termasuk hari ini).</li>
+            <li><strong>Perkiraan selesai</strong> = rata-rata room per hari kerja yang sudah lewat. Room yang dikerjakan sebelum bootcamp ikut terhitung karena TryHackMe tidak memberi tanggal selesai per room.</li>
+            <li>Room dicocokkan berdasarkan judul. "Introduction to Phishing" (P1-S02.05) dihitung dari skenario <em>SOC Simulator: Introduction to Phishing</em>.</li>
+        </ul>
+    </section>
+</div>
+{% endblock %}

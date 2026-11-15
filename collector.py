@@ -114,6 +114,20 @@ def _save(store):
     os.replace(tmp, DATA_FILE)  # atomic: readers never see a half-written file
 
 
+def _track_first_seen(entry, now):
+    """THM does not expose when a room was completed, so record the first sync that saw it.
+
+    Rooms already completed on the first tracked sync are stamped with that sync time;
+    `tracking_since` marks that baseline so the dashboard never claims to know earlier dates.
+    """
+    seen = entry.setdefault('room_first_seen', {})
+    entry.setdefault('tracking_since', now)
+    for room in entry.get('completed_rooms', []):
+        title = (room.get('title') or '').strip()
+        if title and title not in seen:
+            seen[title] = now
+
+
 def run(usernames=None):
     """Fetch the given users (default: all) and merge into data/thm.json.
 
@@ -142,6 +156,7 @@ def run(usernames=None):
             if data:
                 entry.update(data)
                 entry['fetched_at'] = now
+                _track_first_seen(entry, now)
             entry['last_attempt'] = now
             entry['last_error'] = error
             store['users'][username] = entry

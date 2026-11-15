@@ -55,8 +55,59 @@
             {{ ui.stat('Room selesai', person.rooms) }}
             {{ ui.stat('Badge', person.badges_number) }}
             {{ ui.stat('Poin', person.points | thousands) }}
-            {{ ui.stat('Rank global', '#' ~ (person.rank | thousands) if person.rank else '–') }}
+            {{ ui.stat('Rank global', (person.rank if person.rank is string else '#' ~ (person.rank | thousands)) if person.rank else '–') }}
             {{ ui.stat('Streak', person.streak, suffix='hari') }}
+        </div>
+    </section>
+
+    {% set c = person.cur %}
+    <section class="card card__body" aria-labelledby="cur-title">
+        <div class="section-head">
+            <div>
+                <h2 id="cur-title" class="section-title">Progres kurikulum</h2>
+                <p class="section-desc"><span class="num">{{ c.done }}</span> dari {{ c.total }} room · Part 1 {{ c.part_done[1] }}/{{ cur.part_total[1] }} · Part 2 {{ c.part_done[2] }}/{{ cur.part_total[2] }}{% if c.outside %} · {{ c.outside }} room lain di luar kurikulum{% endif %}</p>
+            </div>
+            {{ ui.cur_status(c) }}
+        </div>
+        <div class="cur-detail">
+            <div>
+                {{ ui.cur_bullet(c, cur) }}
+                <dl class="catchup__facts catchup__facts--wide">
+                    <div><dt>Jadwal s.d. hari ini</dt><dd><strong>{{ c.expected }} room</strong><span>{% if c.behind > 0 %}kurang {{ c.behind }} room{% elif c.behind < 0 %}lebih {{ -c.behind }} room{% else %}tepat sesuai jadwal{% endif %}</span></dd></div>
+                    {% if c.milestone %}
+                    <div><dt>Kejar {{ c.milestone.code }} · {{ c.milestone.date | idate }}</dt><dd>{% if c.milestone.need %}<strong>{{ c.milestone.pace }} room/hari</strong><span>{{ c.milestone.need }} room dalam {{ c.milestone.days_left }} hari kerja</span>{% else %}<strong>Tercapai</strong>{% endif %}</dd></div>
+                    {% endif %}
+                    <div><dt>Selesai {{ cur.end | idate }}</dt><dd><strong>{{ c.pace_end }} room/hari</strong><span>{{ c.remaining }} room dalam {{ c.days_left_end }} hari kerja</span></dd></div>
+                    <div><dt>Perkiraan selesai</dt><dd>{% if not c.projection %}<strong>–</strong>{% elif c.projection.late %}<strong class="text-error">Lewat {{ cur.end | idate }}</strong><span>rata-rata {{ '%.1f' | format(c.pace_now) }} room/hari</span>{% else %}<strong>{{ c.projection.date | idate }}</strong><span>rata-rata {{ '%.1f' | format(c.pace_now) }} room/hari</span>{% endif %}</dd></div>
+                </dl>
+                <p class="ms-chips" aria-label="Milestone">{% for m in c.milestones %}{{ ui.milestone_chip(m) }}{% endfor %}</p>
+            </div>
+            <div>
+                {{ ui.burnup_chart(person.chart, 'Rencana vs realisasi room kurikulum', large=True) }}
+                {{ ui.burnup_legend(c.history.since) }}
+            </div>
+        </div>
+        {% if c.status != 'ok' and c.milestone and c.milestone.need %}
+        {% set todo = c.milestone.todo %}
+        <div class="todo">
+            <p class="todo__title">{{ ui.icon('target') }}Room yang perlu diselesaikan untuk {{ c.milestone.code }} ({{ todo | length }})</p>
+            <ol class="todo__list">{% for r in todo[:12] %}<li><span class="code">{{ r.code }}</span> {{ r.title }}</li>{% endfor %}</ol>
+            {% if todo | length > 12 %}<p class="subtle" style="font-size: var(--text-xs)">+{{ todo | length - 12 }} room lagi · lihat daftar section di bawah</p>{% endif %}
+        </div>
+        {% endif %}
+        <div class="sections sections--person">
+            {% for s in cur.sections %}{% set ps = c.sections[loop.index0] %}
+            <details class="section-card section-card--flat{{ ' is-done' if ps.done == ps.total }}">
+                <summary>
+                    <span class="matrix__cell" data-level="{{ ui.section_level(ps) }}" aria-hidden="true"></span>
+                    <span class="code">{{ s.code }}</span>
+                    <span class="section-card__title">{{ s.title }}</span>
+                    <span class="section-card__meta">{{ ps.done }}/{{ ps.total }} · {{ s.end | idate }}</span>
+                    {{ ui.icon('chevron-right', 'icon section-card__chev') }}
+                </summary>
+                <ul class="checklist">{% for r in s.rooms %}<li class="{{ 'is-done' if r.code in c.done_codes }}">{{ ui.icon('check' if r.code in c.done_codes else 'circle') }}<span class="code">{{ r.code }}</span> {{ r.title }}</li>{% endfor %}</ul>
+            </details>
+            {% endfor %}
         </div>
     </section>
 

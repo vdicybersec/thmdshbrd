@@ -166,7 +166,7 @@
     }));
   }
 
-  wireFilter($('[data-board]'), (row, f) => (f === 'idle' ? row.dataset.isIdle === 'true' : row.dataset.noL1 === 'true'), 'peserta');
+  wireFilter($('[data-board]'), (row, f) => (f === 'idle' ? row.dataset.isIdle === 'true' : row.dataset.behind === 'true'), 'peserta');
   wireFilter($('[data-rooms]'), (row, f) => row.dataset.diff === f, 'room', 20);
 
   /* ---------- Sortable table ---------- */

@@ -1,0 +1,1547 @@
+{
+ "name": "Bootcamp L2 Batch 2",
+ "period": "9 November 2026 – 8 Januari 2027",
+ "start": "2026-11-09",
+ "end": "2027-01-08",
+ "hours_per_day": 7,
+ "hours_min_shift": 3,
+ "parts": [
+  {
+   "part": 1,
+   "title": "Fundamental dan Monitoring",
+   "start": "2026-11-09",
+   "end": "2026-12-03"
+  },
+  {
+   "part": 2,
+   "title": "Advanced Detection dan Hunting",
+   "start": "2026-12-04",
+   "end": "2027-01-08"
+  }
+ ],
+ "holidays": [
+  {
+   "date": "2026-12-24",
+   "label": "Cuti bersama Natal"
+  },
+  {
+   "date": "2026-12-25",
+   "label": "Natal"
+  },
+  {
+   "date": "2027-01-01",
+   "label": "Tahun Baru"
+  },
+  {
+   "date": "2027-01-05",
+   "label": "Isra Mikraj"
+  }
+ ],
+ "milestones": [
+  {
+   "code": "M1",
+   "name": "Part 1 Foundation & Monitoring",
+   "date": "2026-11-24",
+   "criteria": "P1-S01 s.d. P1-S10 selesai",
+   "sections": [
+    "P1-S01",
+    "P1-S02",
+    "P1-S03",
+    "P1-S04",
+    "P1-S05",
+    "P1-S06",
+    "P1-S07",
+    "P1-S08",
+    "P1-S09",
+    "P1-S10"
+   ]
+  },
+  {
+   "code": "M2",
+   "name": "Part 1 seluruh non-capstone",
+   "date": "2026-11-27",
+   "criteria": "P1-S01 s.d. P1-S13 selesai",
+   "sections": [
+    "P1-S01",
+    "P1-S02",
+    "P1-S03",
+    "P1-S04",
+    "P1-S05",
+    "P1-S06",
+    "P1-S07",
+    "P1-S08",
+    "P1-S09",
+    "P1-S10",
+    "P1-S11",
+    "P1-S12",
+    "P1-S13"
+   ]
+  },
+  {
+   "code": "M3",
+   "name": "Part 1 Complete",
+   "date": "2026-12-03",
+   "criteria": "67/67 room Part 1 termasuk 4 capstone",
+   "sections": [
+    "P1-S01",
+    "P1-S02",
+    "P1-S03",
+    "P1-S04",
+    "P1-S05",
+    "P1-S06",
+    "P1-S07",
+    "P1-S08",
+    "P1-S09",
+    "P1-S10",
+    "P1-S11",
+    "P1-S12",
+    "P1-S13",
+    "P1-S14"
+   ]
+  },
+  {
+   "code": "M4",
+   "name": "Part 2 SIEM/Cloud",
+   "date": "2026-12-14",
+   "criteria": "P2-S01 s.d. P2-S06 selesai",
+   "sections": [
+    "P2-S01",
+    "P2-S02",
+    "P2-S03",
+    "P2-S04",
+    "P2-S05",
+    "P2-S06"
+   ]
+  },
+  {
+   "code": "M5",
+   "name": "Part 2 Detection & Hunting",
+   "date": "2026-12-18",
+   "criteria": "P2-S07 s.d. P2-S08 selesai",
+   "sections": [
+    "P2-S07",
+    "P2-S08"
+   ]
+  },
+  {
+   "code": "M6",
+   "name": "Part 2 seluruh non-capstone",
+   "date": "2026-12-30",
+   "criteria": "P2-S01 s.d. P2-S14 selesai",
+   "sections": [
+    "P2-S01",
+    "P2-S02",
+    "P2-S03",
+    "P2-S04",
+    "P2-S05",
+    "P2-S06",
+    "P2-S07",
+    "P2-S08",
+    "P2-S09",
+    "P2-S10",
+    "P2-S11",
+    "P2-S12",
+    "P2-S13",
+    "P2-S14"
+   ]
+  },
+  {
+   "code": "M7",
+   "name": "Final Complete",
+   "date": "2027-01-08",
+   "criteria": "78/78 room Part 2 termasuk 5 capstone",
+   "sections": [
+    "P2-S01",
+    "P2-S02",
+    "P2-S03",
+    "P2-S04",
+    "P2-S05",
+    "P2-S06",
+    "P2-S07",
+    "P2-S08",
+    "P2-S09",
+    "P2-S10",
+    "P2-S11",
+    "P2-S12",
+    "P2-S13",
+    "P2-S14",
+    "P2-S15"
+   ]
+  }
+ ],
+ "sections": [
+  {
+   "code": "P1-S01",
+   "part": 1,
+   "title": "Blue Team Introduction",
+   "desc": "Memahami peran SOC dan jalur ancaman dari manusia maupun sistem.",
+   "start": "2026-11-09",
+   "end": "2026-11-09",
+   "capstone": false,
+   "rooms": [
+    {
+     "code": "P1-S01.01",
+     "title": "Junior Security Analyst Intro"
+    },
+    {
+     "code": "P1-S01.02",
+     "title": "SOC Role in Blue Team"
+    },
+    {
+     "code": "P1-S01.03",
+     "title": "Humans as Attack Vectors"
+    },
+    {
+     "code": "P1-S01.04",
+     "title": "Systems as Attack Vectors"
+    }
+   ]
+  },
+  {
+   "code": "P1-S02",
+   "part": 1,
+   "title": "SOC Team Internals",
+   "desc": "Melakukan triage, eskalasi, dokumentasi alert, dan memahami metrik SOC.",
+   "start": "2026-11-09",
+   "end": "2026-11-10",
+   "capstone": false,
+   "rooms": [
+    {
+     "code": "P1-S02.01",
+     "title": "SOC L1 Alert Triage"
+    },
+    {
+     "code": "P1-S02.02",
+     "title": "SOC L1 Alert Reporting"
+    },
+    {
+     "code": "P1-S02.03",
+     "title": "SOC Workbooks and Lookups"
+    },
+    {
+     "code": "P1-S02.04",
+     "title": "SOC Metrics and Objectives"
+    },
+    {
+     "code": "P1-S02.05",
+     "title": "Introduction to Phishing"
+    }
+   ]
+  },
+  {
+   "code": "P1-S03",
+   "part": 1,
+   "title": "Core SOC Solutions",
+   "desc": "Membedakan fungsi EDR, SIEM, SOAR dan melakukan investigasi dasar di Splunk serta Elastic.",
+   "start": "2026-11-10",
+   "end": "2026-11-11",
+   "capstone": false,
+   "rooms": [
+    {
+     "code": "P1-S03.01",
+     "title": "Introduction to EDR"
+    },
+    {
+     "code": "P1-S03.02",
+     "title": "Introduction to SIEM"
+    },
+    {
+     "code": "P1-S03.03",
+     "title": "Splunk: The Basics"
+    },
+    {
+     "code": "P1-S03.04",
+     "title": "Elastic Stack: The Basics"
+    },
+    {
+     "code": "P1-S03.05",
+     "title": "Introduction to SOAR"
+    }
+   ]
+  },
+  {
+   "code": "P1-S04",
+   "part": 1,
+   "title": "Cyber Defence Frameworks",
+   "desc": "Memetakan perilaku penyerang ke framework pertahanan dan investigasi.",
+   "start": "2026-11-11",
+   "end": "2026-11-12",
+   "capstone": false,
+   "rooms": [
+    {
+     "code": "P1-S04.01",
+     "title": "Pyramid Of Pain"
+    },
+    {
+     "code": "P1-S04.02",
+     "title": "Cyber Kill Chain"
+    },
+    {
+     "code": "P1-S04.03",
+     "title": "Unified Kill Chain"
+    },
+    {
+     "code": "P1-S04.04",
+     "title": "MITRE"
+    },
+    {
+     "code": "P1-S04.05",
+     "title": "Summit"
+    },
+    {
+     "code": "P1-S04.06",
+     "title": "Eviction"
+    }
+   ]
+  },
+  {
+   "code": "P1-S05",
+   "part": 1,
+   "title": "Phishing Analysis",
+   "desc": "Menganalisis email, header, URL, dan indikator phishing serta menyusun hasil triage.",
+   "start": "2026-11-12",
+   "end": "2026-11-16",
+   "capstone": false,
+   "rooms": [
+    {
+     "code": "P1-S05.01",
+     "title": "Phishing Analysis Fundamentals"
+    },
+    {
+     "code": "P1-S05.02",
+     "title": "Phishing Emails in Action"
+    },
+    {
+     "code": "P1-S05.03",
+     "title": "Phishing Analysis Tools"
+    },
+    {
+     "code": "P1-S05.04",
+     "title": "Phishing Prevention"
+    },
+    {
+     "code": "P1-S05.05",
+     "title": "The Greenholt Phish"
+    },
+    {
+     "code": "P1-S05.06",
+     "title": "Snapped Phish-ing Line"
+    },
+    {
+     "code": "P1-S05.07",
+     "title": "Phishing Unfolding"
+    }
+   ]
+  },
+  {
+   "code": "P1-S06",
+   "part": 1,
+   "title": "Network Traffic Analysis",
+   "desc": "Membaca PCAP, menyaring paket, dan mengidentifikasi pola trafik mencurigakan.",
+   "start": "2026-11-16",
+   "end": "2026-11-17",
+   "capstone": false,
+   "rooms": [
+    {
+     "code": "P1-S06.01",
+     "title": "Network Traffic Basics"
+    },
+    {
+     "code": "P1-S06.02",
+     "title": "Wireshark: The Basics"
+    },
+    {
+     "code": "P1-S06.03",
+     "title": "Wireshark: Packet Operations"
+    },
+    {
+     "code": "P1-S06.04",
+     "title": "Wireshark: Traffic Analysis"
+    },
+    {
+     "code": "P1-S06.05",
+     "title": "NetworkMiner"
+    }
+   ]
+  },
+  {
+   "code": "P1-S07",
+   "part": 1,
+   "title": "Network Security Monitoring",
+   "desc": "Mengidentifikasi discovery, eksfiltrasi, MITM, dan pemanfaatan IDS/Snort.",
+   "start": "2026-11-17",
+   "end": "2026-11-19",
+   "capstone": false,
+   "rooms": [
+    {
+     "code": "P1-S07.01",
+     "title": "Network Security Essentials"
+    },
+    {
+     "code": "P1-S07.02",
+     "title": "Network Discovery Detection"
+    },
+    {
+     "code": "P1-S07.03",
+     "title": "Data Exfiltration Detection"
+    },
+    {
+     "code": "P1-S07.04",
+     "title": "Man-in-the-Middle Detection"
+    },
+    {
+     "code": "P1-S07.05",
+     "title": "IDS Fundamentals"
+    },
+    {
+     "code": "P1-S07.06",
+     "title": "Snort"
+    }
+   ]
+  },
+  {
+   "code": "P1-S08",
+   "part": 1,
+   "title": "Web Security Monitoring",
+   "desc": "Menganalisis log dan indikator serangan web, web shell, serta aktivitas DDoS.",
+   "start": "2026-11-19",
+   "end": "2026-11-20",
+   "capstone": false,
+   "rooms": [
+    {
+     "code": "P1-S08.01",
+     "title": "Web Security Essentials"
+    },
+    {
+     "code": "P1-S08.02",
+     "title": "Detecting Web Attacks"
+    },
+    {
+     "code": "P1-S08.03",
+     "title": "Detecting Web Shells"
+    },
+    {
+     "code": "P1-S08.04",
+     "title": "Detecting Web DDoS"
+    }
+   ]
+  },
+  {
+   "code": "P1-S09",
+   "part": 1,
+   "title": "Windows Security Monitoring",
+   "desc": "Menginterpretasikan telemetry/log Windows untuk mendeteksi aktivitas berbahaya.",
+   "start": "2026-11-20",
+   "end": "2026-11-23",
+   "capstone": false,
+   "rooms": [
+    {
+     "code": "P1-S09.01",
+     "title": "Windows Logging for SOC"
+    },
+    {
+     "code": "P1-S09.02",
+     "title": "Windows Threat Detection 1"
+    },
+    {
+     "code": "P1-S09.03",
+     "title": "Windows Threat Detection 2"
+    },
+    {
+     "code": "P1-S09.04",
+     "title": "Windows Threat Detection 3"
+    }
+   ]
+  },
+  {
+   "code": "P1-S10",
+   "part": 1,
+   "title": "Linux Security Monitoring",
+   "desc": "Menginterpretasikan log Linux dan mengidentifikasi rangkaian aktivitas mencurigakan.",
+   "start": "2026-11-23",
+   "end": "2026-11-24",
+   "capstone": false,
+   "rooms": [
+    {
+     "code": "P1-S10.01",
+     "title": "Linux Logging for SOC"
+    },
+    {
+     "code": "P1-S10.02",
+     "title": "Linux Threat Detection 1"
+    },
+    {
+     "code": "P1-S10.03",
+     "title": "Linux Threat Detection 2"
+    },
+    {
+     "code": "P1-S10.04",
+     "title": "Linux Threat Detection 3"
+    }
+   ]
+  },
+  {
+   "code": "P1-S11",
+   "part": 1,
+   "title": "Malware Concepts for SOC",
+   "desc": "Mengelompokkan malware, mengenali LOL techniques, dan menyimpulkan temuan awal.",
+   "start": "2026-11-24",
+   "end": "2026-11-25",
+   "capstone": false,
+   "rooms": [
+    {
+     "code": "P1-S11.01",
+     "title": "Malware Classification"
+    },
+    {
+     "code": "P1-S11.02",
+     "title": "Intro to Malware Analysis"
+    },
+    {
+     "code": "P1-S11.03",
+     "title": "Living Off the Land Attacks"
+    },
+    {
+     "code": "P1-S11.04",
+     "title": "Shadow Trace"
+    }
+   ]
+  },
+  {
+   "code": "P1-S12",
+   "part": 1,
+   "title": "Threat Analysis Tools",
+   "desc": "Melakukan enrichment reputasi file, hash, IP, domain, serta korelasi IOC.",
+   "start": "2026-11-25",
+   "end": "2026-11-26",
+   "capstone": false,
+   "rooms": [
+    {
+     "code": "P1-S12.01",
+     "title": "Intro to Cyber Threat Intel"
+    },
+    {
+     "code": "P1-S12.02",
+     "title": "File and Hash Threat Intel"
+    },
+    {
+     "code": "P1-S12.03",
+     "title": "IP and Domain Threat Intel"
+    },
+    {
+     "code": "P1-S12.04",
+     "title": "Invite Only"
+    }
+   ]
+  },
+  {
+   "code": "P1-S13",
+   "part": 1,
+   "title": "SIEM Triage for SOC",
+   "desc": "Mengerjakan case triage SIEM dan membedakan true positive, false positive, serta benign.",
+   "start": "2026-11-26",
+   "end": "2026-11-27",
+   "capstone": false,
+   "rooms": [
+    {
+     "code": "P1-S13.01",
+     "title": "Log Analysis with SIEM"
+    },
+    {
+     "code": "P1-S13.02",
+     "title": "Alert Triage With Splunk"
+    },
+    {
+     "code": "P1-S13.03",
+     "title": "Alert Triage With Elastic"
+    },
+    {
+     "code": "P1-S13.04",
+     "title": "ItsyBitsy"
+    },
+    {
+     "code": "P1-S13.05",
+     "title": "Benign"
+    }
+   ]
+  },
+  {
+   "code": "P1-S14",
+   "part": 1,
+   "title": "Capstone Part 1",
+   "desc": "Menggabungkan seluruh keterampilan L1 dalam investigasi end-to-end.",
+   "start": "2026-11-30",
+   "end": "2026-12-03",
+   "capstone": true,
+   "rooms": [
+    {
+     "code": "P1-S14.01",
+     "title": "Tempest"
+    },
+    {
+     "code": "P1-S14.02",
+     "title": "Boogeyman 1"
+    },
+    {
+     "code": "P1-S14.03",
+     "title": "Boogeyman 2"
+    },
+    {
+     "code": "P1-S14.04",
+     "title": "Boogeyman 3"
+    }
+   ]
+  },
+  {
+   "code": "P2-S01",
+   "part": 2,
+   "title": "Pengantar Part 2",
+   "desc": "Memahami eskalasi analisis L2, standar pelaporan, dan tren pertahanan.",
+   "start": "2026-12-04",
+   "end": "2026-12-04",
+   "capstone": false,
+   "rooms": [
+    {
+     "code": "P2-S01.01",
+     "title": "Senior Security Analyst Intro"
+    },
+    {
+     "code": "P2-S01.02",
+     "title": "SOC L2 Alert Triage"
+    },
+    {
+     "code": "P2-S01.03",
+     "title": "Report Writing for SOC L2"
+    },
+    {
+     "code": "P2-S01.04",
+     "title": "Defensive Security Trends"
+    }
+   ]
+  },
+  {
+   "code": "P2-S02",
+   "part": 2,
+   "title": "Advanced Splunk",
+   "desc": "Menguji SPL, dashboard, dan penggunaan Splunk untuk investigasi yang lebih kompleks.",
+   "start": "2026-12-04",
+   "end": "2026-12-07",
+   "capstone": false,
+   "rooms": [
+    {
+     "code": "P2-S02.01",
+     "title": "Splunk: Exploring SPL"
+    },
+    {
+     "code": "P2-S02.02",
+     "title": "Splunk: Setting up a SOC Lab"
+    },
+    {
+     "code": "P2-S02.03",
+     "title": "Splunk: Dashboards and Reports"
+    },
+    {
+     "code": "P2-S02.04",
+     "title": "Splunk: Data Manipulation"
+    },
+    {
+     "code": "P2-S02.05",
+     "title": "Fixit"
+    }
+   ]
+  },
+  {
+   "code": "P2-S03",
+   "part": 2,
+   "title": "Advanced Elastic",
+   "desc": "Menggunakan query Elastic, ingestion pipeline, endpoint monitoring, dan investigasi.",
+   "start": "2026-12-07",
+   "end": "2026-12-08",
+   "capstone": false,
+   "rooms": [
+    {
+     "code": "P2-S03.01",
+     "title": "Elastic: Query Languages"
+    },
+    {
+     "code": "P2-S03.02",
+     "title": "Elastic: Setting up a SOC Lab"
+    },
+    {
+     "code": "P2-S03.03",
+     "title": "Elastic: Using Elastic Defend"
+    },
+    {
+     "code": "P2-S03.04",
+     "title": "Elastic: Using Logstash"
+    },
+    {
+     "code": "P2-S03.05",
+     "title": "Slingshot"
+    }
+   ]
+  },
+  {
+   "code": "P2-S04",
+   "part": 2,
+   "title": "Active Directory for SOC",
+   "desc": "Mendeteksi tahap initial access, credential attacks, lateral movement, dan post-exploitation AD.",
+   "start": "2026-12-09",
+   "end": "2026-12-09",
+   "capstone": false,
+   "rooms": [
+    {
+     "code": "P2-S04.01",
+     "title": "Monitoring Active Directory"
+    },
+    {
+     "code": "P2-S04.02",
+     "title": "Detecting AD Initial Access"
+    },
+    {
+     "code": "P2-S04.03",
+     "title": "Detecting AD Credential Attacks"
+    },
+    {
+     "code": "P2-S04.04",
+     "title": "Detecting AD Lateral Movement"
+    },
+    {
+     "code": "P2-S04.05",
+     "title": "Detecting AD Post-Exploitation"
+    }
+   ]
+  },
+  {
+   "code": "P2-S05",
+   "part": 2,
+   "title": "Microsoft 365 for SOC",
+   "desc": "Menginvestigasi sinyal keamanan cloud identity dan ekosistem Microsoft 365.",
+   "start": "2026-12-10",
+   "end": "2026-12-10",
+   "capstone": false,
+   "rooms": [
+    {
+     "code": "P2-S05.01",
+     "title": "M365 Monitoring Basics"
+    },
+    {
+     "code": "P2-S05.02",
+     "title": "Entra ID Monitoring"
+    },
+    {
+     "code": "P2-S05.03",
+     "title": "Exchange Online Monitoring"
+    },
+    {
+     "code": "P2-S05.04",
+     "title": "SharePoint Online Monitoring"
+    },
+    {
+     "code": "P2-S05.05",
+     "title": "Microsoft Intune Monitoring"
+    }
+   ]
+  },
+  {
+   "code": "P2-S06",
+   "part": 2,
+   "title": "Cloud Security for SOC",
+   "desc": "Membaca log AWS dan mengidentifikasi ancaman pada autentikasi, layanan, dan workloads.",
+   "start": "2026-12-11",
+   "end": "2026-12-14",
+   "capstone": false,
+   "rooms": [
+    {
+     "code": "P2-S06.01",
+     "title": "Cloud Security Pitfalls"
+    },
+    {
+     "code": "P2-S06.02",
+     "title": "AWS Security Logging"
+    },
+    {
+     "code": "P2-S06.03",
+     "title": "Monitoring AWS Logins"
+    },
+    {
+     "code": "P2-S06.04",
+     "title": "Monitoring AWS Services"
+    },
+    {
+     "code": "P2-S06.05",
+     "title": "Monitoring AWS Workloads"
+    }
+   ]
+  },
+  {
+   "code": "P2-S07",
+   "part": 2,
+   "title": "Detection Engineering for SOC",
+   "desc": "Menyusun logika deteksi, menerapkan Sigma, dan menguji aturan pada studi kasus.",
+   "start": "2026-12-14",
+   "end": "2026-12-15",
+   "capstone": false,
+   "rooms": [
+    {
+     "code": "P2-S07.01",
+     "title": "Intro to Detection Engineering"
+    },
+    {
+     "code": "P2-S07.02",
+     "title": "Detection Rules Development"
+    },
+    {
+     "code": "P2-S07.03",
+     "title": "Sigma Language"
+    },
+    {
+     "code": "P2-S07.04",
+     "title": "SigHunt"
+    },
+    {
+     "code": "P2-S07.05",
+     "title": "AI & Automation in Detection Engineering"
+    },
+    {
+     "code": "P2-S07.06",
+     "title": "DetectMare"
+    }
+   ]
+  },
+  {
+   "code": "P2-S08",
+   "part": 2,
+   "title": "Threat Hunting",
+   "desc": "Membangun hipotesis, melakukan hunting lintas artefak, dan menyusun temuan.",
+   "start": "2026-12-15",
+   "end": "2026-12-18",
+   "capstone": false,
+   "rooms": [
+    {
+     "code": "P2-S08.01",
+     "title": "Threat Hunting: Introduction"
+    },
+    {
+     "code": "P2-S08.02",
+     "title": "Threat Hunting: Foothold"
+    },
+    {
+     "code": "P2-S08.03",
+     "title": "Threat Hunting: Pivoting"
+    },
+    {
+     "code": "P2-S08.04",
+     "title": "Threat Hunting: Endgame"
+    },
+    {
+     "code": "P2-S08.05",
+     "title": "Hunt Me I: Payment Collectors"
+    },
+    {
+     "code": "P2-S08.06",
+     "title": "Hunt Me II: Typo Squatters"
+    },
+    {
+     "code": "P2-S08.07",
+     "title": "Health Hazard"
+    },
+    {
+     "code": "P2-S08.08",
+     "title": "Typo Snare"
+    }
+   ]
+  },
+  {
+   "code": "P2-S09",
+   "part": 2,
+   "title": "Threat Emulation",
+   "desc": "Memahami emulasi adversary terkontrol dan hubungannya dengan validasi deteksi.",
+   "start": "2026-12-18",
+   "end": "2026-12-21",
+   "capstone": false,
+   "rooms": [
+    {
+     "code": "P2-S09.01",
+     "title": "Intro to Threat Emulation"
+    },
+    {
+     "code": "P2-S09.02",
+     "title": "Threat Modelling"
+    },
+    {
+     "code": "P2-S09.03",
+     "title": "Atomic Red Team"
+    },
+    {
+     "code": "P2-S09.04",
+     "title": "Atomic Bird Goes Purple #1"
+    },
+    {
+     "code": "P2-S09.05",
+     "title": "Atomic Bird Goes Purple #2"
+    }
+   ]
+  },
+  {
+   "code": "P2-S10",
+   "part": 2,
+   "title": "Incident Response Lifecycle",
+   "desc": "Mengikuti lifecycle IR dari persiapan sampai lessons learned.",
+   "start": "2026-12-21",
+   "end": "2026-12-22",
+   "capstone": false,
+   "rooms": [
+    {
+     "code": "P2-S10.01",
+     "title": "Preparation"
+    },
+    {
+     "code": "P2-S10.02",
+     "title": "Detection and Analysis"
+    },
+    {
+     "code": "P2-S10.03",
+     "title": "Response and Recovery"
+    },
+    {
+     "code": "P2-S10.04",
+     "title": "Post-Incident Activity"
+    }
+   ]
+  },
+  {
+   "code": "P2-S11",
+   "part": 2,
+   "title": "Cyber Threat Intelligence",
+   "desc": "Memanfaatkan CTI, MISP, dan OpenCTI untuk enrichment serta prioritisasi.",
+   "start": "2026-12-22",
+   "end": "2026-12-23",
+   "capstone": false,
+   "rooms": [
+    {
+     "code": "P2-S11.01",
+     "title": "Intro to Cyber Threat Intel"
+    },
+    {
+     "code": "P2-S11.02",
+     "title": "CTI for Alert Triage"
+    },
+    {
+     "code": "P2-S11.03",
+     "title": "MISP"
+    },
+    {
+     "code": "P2-S11.04",
+     "title": "OpenCTI"
+    },
+    {
+     "code": "P2-S11.05",
+     "title": "Trooper"
+    }
+   ]
+  },
+  {
+   "code": "P2-S12",
+   "part": 2,
+   "title": "Advanced Traffic Analysis",
+   "desc": "Menganalisis trafik dan membangun hipotesis deteksi menggunakan Snort, Zeek, Zui.",
+   "start": "2026-12-23",
+   "end": "2026-12-28",
+   "capstone": false,
+   "rooms": [
+    {
+     "code": "P2-S12.01",
+     "title": "Traffic Analysis Pitfalls"
+    },
+    {
+     "code": "P2-S12.02",
+     "title": "Detection Engineering With Snort"
+    },
+    {
+     "code": "P2-S12.03",
+     "title": "Network Monitoring with Zeek"
+    },
+    {
+     "code": "P2-S12.04",
+     "title": "Threat Hunting with Zui"
+    },
+    {
+     "code": "P2-S12.05",
+     "title": "Advanced Packet Analysis"
+    },
+    {
+     "code": "P2-S12.06",
+     "title": "The Silent Transfer"
+    }
+   ]
+  },
+  {
+   "code": "P2-S13",
+   "part": 2,
+   "title": "Static Malware Analysis",
+   "desc": "Menganalisis artefak malware secara statis, termasuk script, dokumen, dan YARA.",
+   "start": "2026-12-28",
+   "end": "2026-12-29",
+   "capstone": false,
+   "rooms": [
+    {
+     "code": "P2-S13.01",
+     "title": "Basic Static Analysis"
+    },
+    {
+     "code": "P2-S13.02",
+     "title": "Threat Hunting With YARA"
+    },
+    {
+     "code": "P2-S13.03",
+     "title": "Advanced Static Analysis"
+    },
+    {
+     "code": "P2-S13.04",
+     "title": "Script Static Analysis"
+    },
+    {
+     "code": "P2-S13.05",
+     "title": "MalDoc Static Analysis"
+    },
+    {
+     "code": "P2-S13.06",
+     "title": "MalBuster"
+    }
+   ]
+  },
+  {
+   "code": "P2-S14",
+   "part": 2,
+   "title": "Wazuh for SOC and GRC",
+   "desc": "Menavigasi Wazuh, membuat rules, dan mengumpulkan telemetry menggunakan osquery.",
+   "start": "2026-12-30",
+   "end": "2026-12-30",
+   "capstone": false,
+   "rooms": [
+    {
+     "code": "P2-S14.01",
+     "title": "Exploring Wazuh"
+    },
+    {
+     "code": "P2-S14.02",
+     "title": "Building Wazuh Rules"
+    },
+    {
+     "code": "P2-S14.03",
+     "title": "Osquery: The Basics"
+    },
+    {
+     "code": "P2-S14.04",
+     "title": "Monday Monitor"
+    }
+   ]
+  },
+  {
+   "code": "P2-S15",
+   "part": 2,
+   "title": "Capstone Part 2",
+   "desc": "Melakukan investigasi lanjutan end-to-end dan menyusun laporan teknis L2.",
+   "start": "2026-12-31",
+   "end": "2027-01-08",
+   "capstone": true,
+   "rooms": [
+    {
+     "code": "P2-S15.01",
+     "title": "Volt Typhoon"
+    },
+    {
+     "code": "P2-S15.02",
+     "title": "Servidae"
+    },
+    {
+     "code": "P2-S15.03",
+     "title": "APIWizards Breach"
+    },
+    {
+     "code": "P2-S15.04",
+     "title": "Friday Overtime"
+    },
+    {
+     "code": "P2-S15.05",
+     "title": "Conti"
+    }
+   ]
+  }
+ ],
+ "days": [
+  {
+   "h": 1,
+   "date": "2026-11-09",
+   "part": 1,
+   "sections": [
+    "P1-S01",
+    "P1-S02"
+   ],
+   "rooms": 6,
+   "output": "Logbook",
+   "em": true
+  },
+  {
+   "h": 2,
+   "date": "2026-11-10",
+   "part": 1,
+   "sections": [
+    "P1-S02",
+    "P1-S03"
+   ],
+   "rooms": 5,
+   "output": "Logbook",
+   "em": false
+  },
+  {
+   "h": 3,
+   "date": "2026-11-11",
+   "part": 1,
+   "sections": [
+    "P1-S03",
+    "P1-S04"
+   ],
+   "rooms": 5,
+   "output": "Logbook",
+   "em": false
+  },
+  {
+   "h": 4,
+   "date": "2026-11-12",
+   "part": 1,
+   "sections": [
+    "P1-S04",
+    "P1-S05"
+   ],
+   "rooms": 5,
+   "output": "Triage note",
+   "em": false
+  },
+  {
+   "h": 5,
+   "date": "2026-11-13",
+   "part": 1,
+   "sections": [
+    "P1-S05"
+   ],
+   "rooms": 4,
+   "output": "Triage note",
+   "em": true
+  },
+  {
+   "h": 6,
+   "date": "2026-11-16",
+   "part": 1,
+   "sections": [
+    "P1-S05",
+    "P1-S06"
+   ],
+   "rooms": 4,
+   "output": "Triage note",
+   "em": true
+  },
+  {
+   "h": 7,
+   "date": "2026-11-17",
+   "part": 1,
+   "sections": [
+    "P1-S06",
+    "P1-S07"
+   ],
+   "rooms": 4,
+   "output": "Logbook",
+   "em": false
+  },
+  {
+   "h": 8,
+   "date": "2026-11-18",
+   "part": 1,
+   "sections": [
+    "P1-S07"
+   ],
+   "rooms": 4,
+   "output": "Logbook",
+   "em": false
+  },
+  {
+   "h": 9,
+   "date": "2026-11-19",
+   "part": 1,
+   "sections": [
+    "P1-S07",
+    "P1-S08"
+   ],
+   "rooms": 4,
+   "output": "Logbook",
+   "em": false
+  },
+  {
+   "h": 10,
+   "date": "2026-11-20",
+   "part": 1,
+   "sections": [
+    "P1-S08",
+    "P1-S09"
+   ],
+   "rooms": 4,
+   "output": "Logbook",
+   "em": true
+  },
+  {
+   "h": 11,
+   "date": "2026-11-23",
+   "part": 1,
+   "sections": [
+    "P1-S09",
+    "P1-S10"
+   ],
+   "rooms": 4,
+   "output": "Logbook",
+   "em": true
+  },
+  {
+   "h": 12,
+   "date": "2026-11-24",
+   "part": 1,
+   "sections": [
+    "P1-S10",
+    "P1-S11"
+   ],
+   "rooms": 4,
+   "output": "Logbook",
+   "em": false
+  },
+  {
+   "h": 13,
+   "date": "2026-11-25",
+   "part": 1,
+   "sections": [
+    "P1-S11",
+    "P1-S12"
+   ],
+   "rooms": 4,
+   "output": "Logbook",
+   "em": false
+  },
+  {
+   "h": 14,
+   "date": "2026-11-26",
+   "part": 1,
+   "sections": [
+    "P1-S12",
+    "P1-S13"
+   ],
+   "rooms": 3,
+   "output": "Triage sheet",
+   "em": false
+  },
+  {
+   "h": 15,
+   "date": "2026-11-27",
+   "part": 1,
+   "sections": [
+    "P1-S13"
+   ],
+   "rooms": 3,
+   "output": "Triage sheet",
+   "em": true
+  },
+  {
+   "h": 16,
+   "date": "2026-11-30",
+   "part": 1,
+   "sections": [
+    "P1-S14"
+   ],
+   "rooms": 1,
+   "output": "Laporan capstone",
+   "em": true
+  },
+  {
+   "h": 17,
+   "date": "2026-12-01",
+   "part": 1,
+   "sections": [
+    "P1-S14"
+   ],
+   "rooms": 1,
+   "output": "Laporan capstone",
+   "em": false
+  },
+  {
+   "h": 18,
+   "date": "2026-12-02",
+   "part": 1,
+   "sections": [
+    "P1-S14"
+   ],
+   "rooms": 1,
+   "output": "Laporan capstone",
+   "em": false
+  },
+  {
+   "h": 19,
+   "date": "2026-12-03",
+   "part": 1,
+   "sections": [
+    "P1-S14"
+   ],
+   "rooms": 1,
+   "output": "Laporan capstone",
+   "em": false
+  },
+  {
+   "h": 20,
+   "date": "2026-12-04",
+   "part": 2,
+   "sections": [
+    "P2-S01",
+    "P2-S02"
+   ],
+   "rooms": 5,
+   "output": "Logbook",
+   "em": true
+  },
+  {
+   "h": 21,
+   "date": "2026-12-07",
+   "part": 2,
+   "sections": [
+    "P2-S02",
+    "P2-S03"
+   ],
+   "rooms": 5,
+   "output": "Logbook",
+   "em": true
+  },
+  {
+   "h": 22,
+   "date": "2026-12-08",
+   "part": 2,
+   "sections": [
+    "P2-S03"
+   ],
+   "rooms": 4,
+   "output": "Logbook",
+   "em": false
+  },
+  {
+   "h": 23,
+   "date": "2026-12-09",
+   "part": 2,
+   "sections": [
+    "P2-S04"
+   ],
+   "rooms": 5,
+   "output": "Logbook",
+   "em": false
+  },
+  {
+   "h": 24,
+   "date": "2026-12-10",
+   "part": 2,
+   "sections": [
+    "P2-S05"
+   ],
+   "rooms": 5,
+   "output": "Logbook",
+   "em": false
+  },
+  {
+   "h": 25,
+   "date": "2026-12-11",
+   "part": 2,
+   "sections": [
+    "P2-S06"
+   ],
+   "rooms": 4,
+   "output": "Logbook",
+   "em": true
+  },
+  {
+   "h": 26,
+   "date": "2026-12-14",
+   "part": 2,
+   "sections": [
+    "P2-S06",
+    "P2-S07"
+   ],
+   "rooms": 4,
+   "output": "Detection note",
+   "em": true
+  },
+  {
+   "h": 27,
+   "date": "2026-12-15",
+   "part": 2,
+   "sections": [
+    "P2-S07",
+    "P2-S08"
+   ],
+   "rooms": 4,
+   "output": "Hunt note",
+   "em": false
+  },
+  {
+   "h": 28,
+   "date": "2026-12-16",
+   "part": 2,
+   "sections": [
+    "P2-S08"
+   ],
+   "rooms": 3,
+   "output": "Hunt note",
+   "em": false
+  },
+  {
+   "h": 29,
+   "date": "2026-12-17",
+   "part": 2,
+   "sections": [
+    "P2-S08"
+   ],
+   "rooms": 3,
+   "output": "Hunt note",
+   "em": false
+  },
+  {
+   "h": 30,
+   "date": "2026-12-18",
+   "part": 2,
+   "sections": [
+    "P2-S08",
+    "P2-S09"
+   ],
+   "rooms": 5,
+   "output": "Hunt note",
+   "em": true
+  },
+  {
+   "h": 31,
+   "date": "2026-12-21",
+   "part": 2,
+   "sections": [
+    "P2-S09",
+    "P2-S10"
+   ],
+   "rooms": 4,
+   "output": "Logbook",
+   "em": true
+  },
+  {
+   "h": 32,
+   "date": "2026-12-22",
+   "part": 2,
+   "sections": [
+    "P2-S10",
+    "P2-S11"
+   ],
+   "rooms": 5,
+   "output": "Logbook",
+   "em": false
+  },
+  {
+   "h": 33,
+   "date": "2026-12-23",
+   "part": 2,
+   "sections": [
+    "P2-S11",
+    "P2-S12"
+   ],
+   "rooms": 4,
+   "output": "Logbook",
+   "em": false
+  },
+  {
+   "h": 34,
+   "date": "2026-12-28",
+   "part": 2,
+   "sections": [
+    "P2-S12",
+    "P2-S13"
+   ],
+   "rooms": 4,
+   "output": "Logbook",
+   "em": true
+  },
+  {
+   "h": 35,
+   "date": "2026-12-29",
+   "part": 2,
+   "sections": [
+    "P2-S13"
+   ],
+   "rooms": 5,
+   "output": "Logbook",
+   "em": false
+  },
+  {
+   "h": 36,
+   "date": "2026-12-30",
+   "part": 2,
+   "sections": [
+    "P2-S14"
+   ],
+   "rooms": 4,
+   "output": "Logbook",
+   "em": false
+  },
+  {
+   "h": 37,
+   "date": "2026-12-31",
+   "part": 2,
+   "sections": [
+    "P2-S15"
+   ],
+   "rooms": 1,
+   "output": "Laporan capstone",
+   "em": false
+  },
+  {
+   "h": 38,
+   "date": "2027-01-04",
+   "part": 2,
+   "sections": [
+    "P2-S15"
+   ],
+   "rooms": 1,
+   "output": "Laporan capstone",
+   "em": true
+  },
+  {
+   "h": 39,
+   "date": "2027-01-06",
+   "part": 2,
+   "sections": [
+    "P2-S15"
+   ],
+   "rooms": 1,
+   "output": "Laporan capstone",
+   "em": false
+  },
+  {
+   "h": 40,
+   "date": "2027-01-07",
+   "part": 2,
+   "sections": [
+    "P2-S15"
+   ],
+   "rooms": 1,
+   "output": "Laporan capstone",
+   "em": false
+  },
+  {
+   "h": 41,
+   "date": "2027-01-08",
+   "part": 2,
+   "sections": [
+    "P2-S15"
+   ],
+   "rooms": 1,
+   "output": "Laporan capstone",
+   "em": true
+  }
+ ]
+}

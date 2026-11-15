@@ -8,6 +8,8 @@ import time
 import requests
 from flask import Flask, jsonify, redirect, render_template, url_for
 
+from curriculum import Curriculum, burnup
+
 app = Flask(__name__)
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -25,6 +27,14 @@ _REMOTE_CACHE = {'ts': 0, 'data': None, 'ok': False}
 REMOTE_CACHE_TTL = 30  # seconds
 STALE_AFTER = timedelta(hours=1)  # sync runs every 15 min; older than this means something is wrong
 WIB = timezone(timedelta(hours=7))
+CUR = Curriculum()
+MONTHS_ID = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September',
+             'Oktober', 'November', 'Desember']
+DAYS_ID = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu']
+
+
+def today_wib():
+    return datetime.now(WIB).date()
 
 
 # --------------------------------------------------------------------------- data source
@@ -173,6 +183,7 @@ def get_user_data(user_info, store):
         'fetched_at': entry.get('fetched_at'),
         'fetched_at_fmt': _fmt_wib(entry.get('fetched_at')),
         'last_error': entry.get('last_error'),
+        'cur': CUR.progress(entry, today_wib()),
     }
 
 
@@ -181,6 +192,62 @@ def sync_info(store, reachable):
     stale = last is None or datetime.now(timezone.utc) - last > STALE_AFTER
     return {'iso': store.get('last_run'), 'fmt': _fmt_wib(store.get('last_run')),
             'stale': stale, 'reachable': reachable}
+
+
+def program_info(today):
+    done_days, total_days = CUR.day_index(today)
+    nd = CUR.next_day(today)
+    part = next((p for p in CUR.parts if date.fromisoformat(p['start']) <= (nd['date'] if nd else today)
+                 <= date.fromisoformat(p['end'])), None)
+    return {
+        'name': CUR.name, 'period': CUR.period, 'done_days': done_days, 'total_days': total_days,
+        'started': today >= CUR.start, 'finished': today > CUR.end,
+        'today': CUR.day_by_date.get(today), 'is_today': nd is not None and nd['date'] == today,
+        'next_day': nd, 'part': part, 'milestone': CUR.next_milestone(today), 'em': CUR.next_em(today),
+        'planned': CUR.planned_by(today - timedelta(days=1)), 'total_rooms': CUR.total,
+        'week': CUR.week(today), 'today_date': today,
+    }
+
+
+def team_view(people, today):
+    """Shared numbers for the curriculum blocks on the overview."""
+    n = len(people) or 1
+    for p in people:
+        p['chart'] = burnup(CUR, p['cur']['history'], today)
+    by_status = {k: sum(p['cur']['status'] == k for p in people) for k in ('ok', 'warning', 'critical')}
+    milestones = []
+    for i, m in enumerate(CUR.milestones):
+        states = [p['cur']['milestones'][i]['state'] for p in people]
+        milestones.append({'code': m['code'], 'name': m['name'], 'date': m['date'], 'criteria': m['criteria'],
+                           'done': states.count('done'), 'missed': states.count('missed'),
+                           'past': m['date'] < today, 'next': CUR.next_milestone(today) is m})
+    scheduled = {c for d in CUR.days if d['date'] <= today for c in d['sections']}
+    nd = CUR.next_day(today)
+    current = set(nd['sections']) if nd else set()
+    return {
+        'status': by_status,
+        'avg_done': round(sum(p['cur']['done'] for p in people) / n),
+        'avg_pct': sum(p['cur']['pct'] for p in people) / n,
+        'milestones': milestones,
+        'sections': [dict(s, due=s['code'] in scheduled and date.fromisoformat(s['end']) < today,
+                          current=s['code'] in current) for s in CUR.sections],
+    }
+
+
+@app.template_filter('idate')
+def idate_filter(d, fmt='short'):
+    """Indonesian dates: short '24 Nov', long 'Selasa, 24 November 2026', day 'Senin'."""
+    if not d:
+        return ''
+    if isinstance(d, str):
+        d = date.fromisoformat(d[:10])
+    if fmt == 'day':
+        return DAYS_ID[d.weekday()]
+    if fmt == 'long':
+        return f'{DAYS_ID[d.weekday()]}, {d.day} {MONTHS_ID[d.month - 1]} {d.year}'
+    if fmt == 'month':
+        return f'{MONTHS_ID[d.month - 1]} {d.year}'
+    return f'{d.day} {MONTHS_ID[d.month - 1][:3]}'
 
 
 @app.template_filter('wib')
@@ -219,7 +286,7 @@ def favicon():
 def index():
     store, reachable = _load_store()
     people = [get_user_data(u, store) for u in users_info]
-    people.sort(key=lambda x: (x['rooms'], x['points']), reverse=True)
+    people.sort(key=lambda x: (x['cur']['done'], x['rooms'], x['points']), reverse=True)
     for i, person in enumerate(people, 1):
         person['position'] = i
     n = len(people)
@@ -232,7 +299,21 @@ def index():
         'soc_l2': sum(p['soc']['l2'] is not None for p in people),
         'max_rooms': max((p['rooms'] for p in people), default=0) or 1,
     }
-    return render_template('index.html', people=people, summary=summary, sync=sync_info(store, reachable))
+    today = today_wib()
+    team = team_view(people, today)
+    catchup = sorted(people, key=lambda p: (-p['cur']['behind'], p['name'].lower()))
+    return render_template('index.html', people=people, summary=summary, sync=sync_info(store, reachable),
+                           program=program_info(today), team=team, catchup=catchup, cur=CUR)
+
+
+@app.route('/kurikulum')
+def curriculum_page():
+    store, reachable = _load_store()
+    today = today_wib()
+    people = [get_user_data(u, store) for u in users_info]
+    team = team_view(people, today)
+    return render_template('curriculum.html', people=people, cur=CUR, months=CUR.months(today), team=team,
+                           program=program_info(today), sync=sync_info(store, reachable))
 
 
 @app.route('/user/<username>')
@@ -241,7 +322,10 @@ def user_detail(username):
     store, reachable = _load_store()
     if not user_info:
         return render_template('user_detail.html', person=None, sync=sync_info(store, reachable)), 404
-    return render_template('user_detail.html', person=get_user_data(user_info, store),
+    person = get_user_data(user_info, store)
+    today = today_wib()
+    person['chart'] = burnup(CUR, person['cur']['history'], today, width=720, height=200)
+    return render_template('user_detail.html', person=person, cur=CUR, program=program_info(today),
                            sync=sync_info(store, reachable))
 
 

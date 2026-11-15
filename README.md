@@ -39,3 +39,12 @@ All take `username=` (the old `user=<_id>` parameter is rejected; `_id` is no lo
 - Without `COLLECTOR_URL`, `app.py` reads `data/thm.json` locally (useful on the collector host).
 
 Refreshes from the dashboard are rate limited by the collector (all users: 120 s, one user: 60 s).
+
+## Curriculum tracking
+
+`curriculum.json` holds the Bootcamp L2 2026–2027 plan (sections, rooms, daily calendar, milestones),
+transcribed from the curriculum PDF. `curriculum.py` matches each participant's completed THM rooms to
+curriculum rooms **by title** (aliases in `ALIASES`) and computes schedule gap, catch-up pace to the next
+milestone and to the end date. THM does not expose completion dates, so `collector.py` records
+`room_first_seen` per room from the first sync onwards; the burn-up charts only show history from then.
+Routes: `/` (overview with catch-up), `/kurikulum` (calendar, milestones, section × participant matrix).

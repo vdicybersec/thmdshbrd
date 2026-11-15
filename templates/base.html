@@ -1,3 +1,4 @@
+{% macro ui_icon(n) %}<svg class="icon" aria-hidden="true"><use href="#i-{{ n }}"/></svg>{% endmacro %}
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -32,6 +33,9 @@
         <symbol id="i-chevron-right" viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></symbol>
         <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
         <symbol id="i-pointer" viewBox="0 0 24 24"><path d="M9 3v10l-3-2-2 2 6 7h8l1-8-6-2V3a2 2 0 0 0-4 0z"/></symbol>
+        <symbol id="i-calendar" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></symbol>
+        <symbol id="i-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/></symbol>
+        <symbol id="i-users" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7M18 14a6.5 6.5 0 0 1 3.5 6"/></symbol>
         <symbol id="i-route" viewBox="0 0 24 24"><circle cx="6" cy="19" r="2"/><circle cx="18" cy="5" r="2"/><path d="M8 19h7a3 3 0 0 0 0-6H9a3 3 0 0 1 0-6h7"/></symbol>
     </svg>
 
@@ -44,6 +48,10 @@
                     <span class="brand__sub">Visionet L2 Bootcamp Batch 2 · TryHackMe</span>
                 </span>
             </a>
+            <nav class="nav" aria-label="Navigasi utama">
+                <a href="{{ url_for('index') }}"{% if request.endpoint in ('index', 'user_detail') %} aria-current="page"{% endif %}>{{ ui_icon('users') }}Peserta</a>
+                <a href="{{ url_for('curriculum_page') }}"{% if request.endpoint == 'curriculum_page' %} aria-current="page"{% endif %}>{{ ui_icon('calendar') }}Kurikulum</a>
+            </nav>
             <div class="header-actions">
                 {% block header_actions %}{% endblock %}
             </div>
