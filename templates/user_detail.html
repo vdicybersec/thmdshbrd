@@ -1,365 +1,207 @@
-<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <title>Detail Pengguna - {{ user_data.username }}</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='favicon.svg') }}">
-    <link rel="apple-touch-icon" href="{{ url_for('static', filename='favicon.svg') }}">
-</head>
-<body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen text-gray-800 font-sans">
-    <!-- Loading Screen -->
-    <div id="loading-screen" class="fixed inset-0 bg-white flex items-center justify-center z-50 shadow-lg">
-        <div class="text-center bg-white p-6 md:p-8 rounded-lg shadow-2xl border max-w-sm mx-4">
-            <div class="animate-spin rounded-full h-12 w-12 md:h-16 md:w-16 border-b-4 border-blue-600 mx-auto mb-4 md:mb-6"></div>
-            <h2 class="text-lg md:text-xl font-bold text-gray-800 mb-2">Memuat Detail Pengguna</h2>
-            <p class="text-sm md:text-lg font-medium text-gray-700 mb-2">Mengambil data dari API TryHackMe...</p>
-            <p class="text-xs md:text-sm text-gray-500">Mohon tunggu sebentar, proses ini mungkin memakan waktu beberapa detik</p>
-        </div>
+{% extends 'base.html' %}
+{% import '_components.html' as ui %}
+
+{% block title %}{{ person.name if person else 'Tidak ditemukan' }}{% endblock %}
+
+{% block header_actions %}
+    {{ ui.sync_status(sync) }}
+{% endblock %}
+
+{% block content %}
+<a class="breadcrumb" href="{{ url_for('index') }}">{{ ui.icon('arrow-left') }}Semua peserta</a>
+
+{% if not person %}
+<div class="card" style="margin-top: var(--space-4)">
+    <div class="empty">
+        {{ ui.icon('search') }}
+        <p class="empty__title">Peserta tidak ditemukan</p>
+        <p>Username ini tidak terdaftar di dashboard.</p>
     </div>
+</div>
+{% else %}
+<div class="stack" style="margin-top: var(--space-4)">
 
-    <div class="max-w-6xl mx-auto px-4 py-8">
-        {% if user_data %}
-        <div class="flex items-center justify-center md:justify-between mb-6 md:mb-8">
-            <h1 class="text-2xl md:text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600 drop-shadow-sm">Detail Pengguna: {{ user_data.username }}</h1>
-            <div class="hidden md:flex items-center space-x-2">
-                <a href="{{ url_for('index') }}" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-lg shadow">Kembali</a>
-                <button id="refresh-user-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg shadow" onclick="refreshUser()">Refresh Data</button>
-            </div>
-        </div>
-
-        <!-- Profile Section -->
-        <div class="bg-white/80 backdrop-blur-sm rounded-2xl shadow-2xl p-6 md:p-8 mb-6 md:mb-8 border border-white/20">
-            <div class="flex flex-col md:flex-row items-center md:items-start space-y-4 md:space-y-6 md:space-y-0 md:space-x-6 lg:space-x-8">
-                <img src="{{ user_data.avatar }}" alt="Avatar" class="w-24 h-24 md:w-28 md:h-28 lg:w-32 lg:h-32 rounded-full border-4 border-blue-300 shadow-xl hover:scale-105 transition-transform">
-                <div class="flex-1 text-center md:text-left">
-                    <h2 class="text-lg md:text-xl lg:text-2xl font-bold text-gray-800 mb-4 md:mb-6 bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">{{ user_data.name }}</h2>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
-                        <p class="text-gray-700 text-sm md:text-base lg:text-lg"><strong class="text-blue-600">Rank:</strong> {{ user_data.rank }}</p>
-                        <p class="text-gray-700 text-sm md:text-base lg:text-lg"><strong class="text-blue-600">Poin:</strong> {{ user_data.points }}</p>
-                        <p class="text-gray-700 text-sm md:text-base lg:text-lg"><strong class="text-blue-600">Room Selesai:</strong> {{ user_data.completed_rooms_number }}</p>
-                        <p class="text-gray-700 text-sm md:text-base lg:text-lg"><strong class="text-blue-600">Badge:</strong> {{ user_data.badges_number }}</p>
-                        <p class="text-gray-700 text-sm md:text-base lg:text-lg"><strong class="text-blue-600">Negara:</strong> {{ user_data.country | upper }}</p>
-                        <p class="text-gray-700 text-sm md:text-base lg:text-lg"><strong class="text-blue-600">Streak:</strong> {{ user_data.streak }}</p>
-                        {% if user_data.level %}<p class="text-gray-700 text-sm md:text-base lg:text-lg"><strong class="text-blue-600">Level:</strong> {{ user_data.level }}</p>{% endif %}
-                        {% if user_data.top_percentage %}<p class="text-gray-700 text-sm md:text-base lg:text-lg"><strong class="text-blue-600">Top:</strong> {{ user_data.top_percentage }}%</p>{% endif %}
-                    </div>
-                    <p class="text-xs text-gray-500 mt-4">Data per: {{ user_data.fetched_at or 'belum pernah sync' }}{% if user_data.last_error %} · <span class="text-red-600">sync terakhir gagal, menampilkan data lama</span>{% endif %}</p>
+    <section class="card card__body" aria-labelledby="profile-name">
+        <div class="profile">
+            {{ ui.avatar(person, 'lg') }}
+            <div class="profile__main">
+                <h1 id="profile-name" class="profile__name">{{ person.name }}</h1>
+                <div class="profile__meta">
+                    <span>@{{ person.username }}</span>
+                    {% if person.level %}<span>Level {{ person.level }}</span>{% endif %}
+                    {% if person.top_percentage %}<span>Top {{ person.top_percentage }}% global</span>{% endif %}
+                    {% if person.country %}<span>{{ ui.icon('flag') }}{{ person.country }}</span>{% endif %}
+                    {{ ui.activity_status(person) }}
                 </div>
             </div>
-        </div>
-
-        <!-- Activity Section -->
-        <div class="bg-white/80 backdrop-blur-sm rounded-2xl shadow-2xl p-6 md:p-8 mb-6 md:mb-8 border border-white/20">
-            <h2 class="text-lg md:text-xl lg:text-2xl font-bold text-gray-800 mb-4 md:mb-6 border-b-2 border-blue-500 pb-2 bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">Aktivitas Harian</h2>
-            {% if activity %}
-            <div class="w-full max-w-4xl mx-auto bg-gray-50 p-4 md:p-6 rounded-xl">
-                <div class="flex items-center justify-between mb-3">
-                    <div class="flex items-center space-x-2">
-                        <label class="text-sm font-semibold">Tampilkan:</label>
-                        <select id="range-select" class="border rounded px-2 py-1 text-sm">
-                            <option value="last7">7 Hari Terakhir (default)</option>
-                            <option value="monthweek">Pilih Bulan & Minggu</option>
-                        </select>
-                    </div>
-                    <div id="month-week-controls" class="hidden items-center space-x-2">
-                        <select id="month-select" class="border rounded px-2 py-1 text-sm"></select>
-                        <select id="week-select" class="border rounded px-2 py-1 text-sm"></select>
-                        <button id="apply-range-btn" class="bg-blue-600 text-white px-3 py-1 rounded text-sm">Terapkan</button>
-                    </div>
-                </div>
-                <canvas id="activityChart" style="width:100%; height:240px; max-height:320px;"></canvas>
-            </div>
-            <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-            <script>
-                const activityData = {{ activity | safe }};
-                const activityMap = {};
-                activityData.forEach(item => activityMap[item.date] = item.count);
-
-                // helpers
-                function fmtDate(d) {
-                    const yyyy = d.getFullYear();
-                    const mm = String(d.getMonth() + 1).padStart(2, '0');
-                    const dd = String(d.getDate()).padStart(2, '0');
-                    return `${yyyy}-${mm}-${dd}`;
-                }
-
-                function datesBetween(start, end) {
-                    const arr = [];
-                    const cur = new Date(start);
-                    while (cur <= end) {
-                        arr.push(fmtDate(cur));
-                        cur.setDate(cur.getDate() + 1);
-                    }
-                    return arr;
-                }
-
-                // Build month & week controls
-                const monthSelect = document.getElementById('month-select');
-                const weekSelect = document.getElementById('week-select');
-                const rangeSelect = document.getElementById('range-select');
-                const monthWeekControls = document.getElementById('month-week-controls');
-                const applyRangeBtn = document.getElementById('apply-range-btn');
-
-                const currentYear = {{ current_year }};
-                const monthNames = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
-
-                function populateMonths() {
-                    monthSelect.innerHTML = '';
-                    for (let m = 1; m <= 12; m++) {
-                        const opt = document.createElement('option');
-                        opt.value = m;
-                        opt.text = monthNames[m-1];
-                        if (m === (new Date()).getMonth() + 1) opt.selected = true;
-                        monthSelect.appendChild(opt);
-                    }
-                }
-
-                function populateWeeksForMonth(month) {
-                    weekSelect.innerHTML = '';
-                    const year = currentYear;
-                    const first = new Date(year, month-1, 1);
-                    const last = new Date(year, month, 0); // last day in month
-                    let start = 1;
-                    let weekIdx = 1;
-                    while (start <= last.getDate()) {
-                        const end = Math.min(start + 6, last.getDate());
-                        const opt = document.createElement('option');
-                        const s = new Date(year, month-1, start);
-                        const e = new Date(year, month-1, end);
-                        opt.value = `${start}-${end}`;
-                        opt.text = `Minggu ${weekIdx} (${fmtDate(s)} sampai ${fmtDate(e)})`;
-                        weekSelect.appendChild(opt);
-                        start += 7;
-                        weekIdx += 1;
-                    }
-                }
-
-                populateMonths();
-                populateWeeksForMonth((new Date()).getMonth() + 1);
-
-                monthSelect.addEventListener('change', (e) => {
-                    populateWeeksForMonth(parseInt(e.target.value, 10));
-                });
-
-                rangeSelect.addEventListener('change', (e) => {
-                    if (e.target.value === 'monthweek') {
-                        monthWeekControls.classList.remove('hidden');
-                    } else {
-                        monthWeekControls.classList.add('hidden');
-                        renderLastNDays(7);
-                    }
-                });
-
-                applyRangeBtn.addEventListener('click', () => {
-                    const mm = parseInt(monthSelect.value, 10);
-                    const wk = weekSelect.value.split('-');
-                    const startDay = parseInt(wk[0], 10);
-                    const endDay = parseInt(wk[1], 10);
-                    const start = new Date(currentYear, mm-1, startDay);
-                    const end = new Date(currentYear, mm-1, endDay);
-                    renderForRange(start, end);
-                });
-
-                // Chart instance
-                let activityChart = null;
-
-                function renderChart(dates, counts) {
-                    const ctx = document.getElementById('activityChart').getContext('2d');
-                    if (activityChart) activityChart.destroy();
-
-                    // Compute a "nice" max for the y-axis so bars scale proportionally
-                    const maxCount = counts.length ? Math.max(...counts) : 0;
-                    function niceMax(n) {
-                        if (n <= 5) return 5;
-                        const mag = Math.pow(10, Math.floor(Math.log10(n)));
-                        const norm = Math.ceil(n / mag);
-                        let unit;
-                        if (norm <= 1) unit = 1;
-                        else if (norm <= 2) unit = 2;
-                        else if (norm <= 5) unit = 5;
-                        else unit = 10;
-                        return unit * mag;
-                    }
-                    const suggestedMax = niceMax(maxCount);
-
-                    function fmtNumber(v) {
-                        if (v >= 1000000) return (v / 1000000).toFixed(1).replace(/\.0$/, '') + 'M';
-                        if (v >= 1000) return (v / 1000).toFixed(1).replace(/\.0$/, '') + 'k';
-                        return v;
-                    }
-
-                    const stepSize = Math.max(1, Math.ceil(suggestedMax / 5));
-
-                    activityChart = new Chart(ctx, {
-                        type: 'bar',
-                        data: {
-                            labels: dates,
-                            datasets: [{
-                                label: 'Jumlah Event per Hari',
-                                data: counts,
-                                backgroundColor: 'rgba(59, 130, 246, 0.8)',
-                                borderColor: 'rgba(59, 130, 246, 1)',
-                                borderWidth: 1,
-                                maxBarThickness: 40,
-                                barPercentage: 0.75,
-                                categoryPercentage: 0.85
-                            }]
-                        },
-                        options: {
-                            responsive: true,
-                            maintainAspectRatio: false,
-                            plugins: { legend: { display: false }, tooltip: { mode: 'index', intersect: false } },
-                            scales: {
-                                y: {
-                                    beginAtZero: true,
-                                    suggestedMax: suggestedMax,
-                                    ticks: { maxTicksLimit: 6, stepSize: stepSize, callback: function(val) { return fmtNumber(val); } },
-                                    grid: { color: 'rgba(0,0,0,0.05)' }
-                                },
-                                x: { ticks: { maxRotation: 45, minRotation: 0 }, grid: { display: false } }
-                            }
-                        }
-                    });
-                }
-
-                function renderLastNDays(n) {
-                    const today = new Date();
-                    const start = new Date();
-                    start.setDate(today.getDate() - (n - 1));
-                    const dates = datesBetween(start, today);
-                    const counts = dates.map(d => activityMap[d] || 0);
-                    renderChart(dates, counts);
-                }
-
-                function renderForRange(start, end) {
-                    const dates = datesBetween(start, end);
-                    const counts = dates.map(d => activityMap[d] || 0);
-                    renderChart(dates, counts);
-                }
-
-                // default: 7 days
-                renderLastNDays(7);
-
-            </script>
-            {% else %}
-            <p class="text-gray-500 text-center py-6 md:py-8 text-sm md:text-base lg:text-lg">Tidak ada data aktivitas untuk tahun ini.</p>
-            {% endif %}
-        </div>
-
-        <!-- Badges Section -->
-        <div class="bg-white/80 backdrop-blur-sm rounded-2xl shadow-2xl p-6 md:p-8 mb-6 md:mb-8 border border-white/20">
-            <h2 class="text-lg md:text-xl lg:text-2xl font-bold text-gray-800 mb-4 md:mb-6 border-b-2 border-blue-500 pb-2 bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">Badges</h2>
-            {% if user_data.badges %}
-            <div class="overflow-x-auto">
-                <table class="w-full table-auto border-collapse border border-gray-300 rounded-lg overflow-hidden shadow-lg">
-                    <thead class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white">
-                        <tr>
-                            <th class="px-3 md:px-6 py-2 md:py-4 text-left font-semibold text-sm md:text-base lg:text-lg">Gambar Badge</th>
-                            <th class="px-3 md:px-6 py-2 md:py-4 text-left font-semibold text-sm md:text-base lg:text-lg">Judul</th>
-                            <th class="px-3 md:px-6 py-2 md:py-4 text-left font-semibold text-sm md:text-base lg:text-lg hidden md:table-cell">Deskripsi</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for badge in user_data.badges %}
-                        <tr class="{% if loop.index % 2 == 0 %}bg-blue-50/50{% else %}bg-white{% endif %} hover:bg-blue-100/50 transition-colors">
-                            <td class="border border-gray-200 px-3 md:px-6 py-2 md:py-4"><img src="{{ badge.image if badge.image.startswith('http') else 'https://tryhackme.com' + badge.image }}" alt="{{ badge.title }}" class="w-8 h-8 md:w-10 md:h-10 lg:w-12 lg:h-12 rounded-full border-2 border-blue-300 shadow-md hover:scale-110 transition-transform"></td>
-                            <td class="border border-gray-200 px-3 md:px-6 py-2 md:py-4 font-semibold text-gray-800 text-sm md:text-base">{{ badge.title }}</td>
-                            <td class="border border-gray-200 px-3 md:px-6 py-2 md:py-4 text-gray-600 text-sm hidden md:table-cell">{{ badge.description }}</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-            {% else %}
-            <p class="text-gray-500 text-center py-6 md:py-8 text-sm md:text-base lg:text-lg">Tidak ada badge yang diperoleh.</p>
-            {% endif %}
-        </div>
-
-        <!-- Completed Rooms Section -->
-        <div class="bg-white/80 backdrop-blur-sm rounded-2xl shadow-2xl p-6 md:p-8 mb-6 md:mb-8 border border-white/20">
-            <h2 class="text-lg md:text-xl lg:text-2xl font-bold text-gray-800 mb-4 md:mb-6 border-b-2 border-blue-500 pb-2 bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">Room yang Telah Diselesaikan</h2>
-            <div class="overflow-x-auto">
-                <table class="w-full table-auto border-collapse border border-gray-300 rounded-lg overflow-hidden shadow-lg">
-                    <thead class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white">
-                        <tr>
-                            <th class="px-3 md:px-6 py-2 md:py-4 text-left font-semibold text-sm md:text-base lg:text-lg">Gambar</th>
-                            <th class="px-3 md:px-6 py-2 md:py-4 text-left font-semibold text-sm md:text-base lg:text-lg">Nama Room</th>
-                            <th class="px-3 md:px-6 py-2 md:py-4 text-left font-semibold text-sm md:text-base lg:text-lg hidden lg:table-cell">Deskripsi</th>
-                            <th class="px-3 md:px-6 py-2 md:py-4 text-left font-semibold text-sm md:text-base lg:text-lg">Kesulitan</th>
-                            <th class="px-3 md:px-6 py-2 md:py-4 text-left font-semibold text-sm md:text-base lg:text-lg">Tipe</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for room in rooms %}
-                        <tr class="{% if loop.index % 2 == 0 %}bg-blue-50/50{% else %}bg-white{% endif %} hover:bg-blue-100/50 transition-colors">
-                            <td class="border border-gray-200 px-3 md:px-6 py-2 md:py-4"><img src="{{ room.image_url }}" alt="Room Image" class="w-12 h-12 md:w-14 md:h-14 lg:w-16 lg:h-16 rounded-lg object-cover border-2 border-blue-300 shadow-md hover:scale-105 transition-transform"></td>
-                            <td class="border border-gray-200 px-3 md:px-6 py-2 md:py-4 font-semibold text-gray-800 text-sm md:text-base">{{ room.title }}</td>
-                            <td class="border border-gray-200 px-3 md:px-6 py-2 md:py-4 text-gray-600 text-sm hidden lg:table-cell">{{ room.description }}</td>
-                            <td class="border border-gray-200 px-3 md:px-6 py-2 md:py-4">
-                                <span class="px-2 py-1 md:px-3 md:py-1 rounded-full text-xs md:text-sm font-semibold
-                                    {% if room.difficulty == 'easy' %}bg-green-100 text-green-800
-                                    {% elif room.difficulty == 'medium' %}bg-yellow-100 text-yellow-800
-                                    {% elif room.difficulty == 'hard' %}bg-red-100 text-red-800
-                                    {% else %}bg-gray-100 text-gray-800{% endif %}">
-                                    {{ room.difficulty | capitalize }}
-                                </span>
-                            </td>
-                            <td class="border border-gray-200 px-3 md:px-6 py-2 md:py-4">
-                                <span class="px-2 py-1 md:px-3 md:py-1 rounded-full text-xs md:text-sm font-semibold bg-blue-100 text-blue-800">{{ room.type | capitalize }}</span>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+            <div class="profile__actions">
+                {{ ui.refresh_button(url_for('refresh_user', username=person.username)) }}
+                <a href="https://tryhackme.com/p/{{ person.username }}" target="_blank" rel="noopener" class="subtle" style="font-size: var(--text-xs)">
+                    Profil TryHackMe {{ ui.icon('external', 'icon') }}
+                </a>
             </div>
         </div>
-
-        {% else %}
-        <div class="bg-white/80 backdrop-blur-sm rounded-2xl shadow-2xl p-6 md:p-8 text-center border border-white/20">
-            <h1 class="text-xl md:text-2xl lg:text-3xl font-bold text-gray-800 mb-4 bg-gradient-to-r from-red-600 to-pink-600 bg-clip-text text-transparent">Pengguna tidak ditemukan</h1>
+        {% if person.last_error %}
+        <div class="alert alert--warning" role="status" style="margin-top: var(--space-4)">
+            {{ ui.icon('alert') }}
+            <p><strong>Sync terakhir untuk peserta ini gagal.</strong> Menampilkan data per {{ person.fetched_at_fmt or '–' }}.</p>
         </div>
         {% endif %}
+    </section>
 
-        <div class="text-center mt-8 md:mt-10">
-            <a href="{{ url_for('index') }}" class="inline-block bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold py-3 md:py-4 px-6 md:px-8 rounded-xl shadow-xl hover:shadow-2xl transition-all duration-300 border-2 border-white text-sm md:text-base">Kembali ke Dashboard</a>
+    <section aria-label="Statistik">
+        <div class="stats stats--compact">
+            {{ ui.stat('Room selesai', person.rooms) }}
+            {{ ui.stat('Badge', person.badges_number) }}
+            {{ ui.stat('Poin', person.points | thousands) }}
+            {{ ui.stat('Rank global', '#' ~ (person.rank | thousands) if person.rank else '–') }}
+            {{ ui.stat('Streak', person.streak, suffix='hari') }}
         </div>
-    </div>
+    </section>
 
-    <script>
-        // Hide loading screen when page is loaded
-        window.addEventListener('load', function() {
-            document.getElementById('loading-screen').style.display = 'none';
-        });
+    <section class="card card__body" aria-labelledby="paths-title">
+        <div class="section-head">
+            <div>
+                <h2 id="paths-title" class="section-title">Jalur belajar</h2>
+                <p class="section-desc">Target bootcamp: SOC Level 1 dan SOC Level 2</p>
+            </div>
+            <span class="tag {{ 'tag--success' if person.soc.count == 2 else 'tag--info' }}">{{ person.soc.count }} dari 2 selesai</span>
+        </div>
+        <div class="paths">
+            {% for key, title in [('l1', 'SOC Level 1'), ('l2', 'SOC Level 2')] %}
+            {% set cert = person.soc[key] %}
+            <div class="path {{ 'path--done' if cert }}">
+                <span class="path__icon">{{ ui.icon('check' if cert else 'route') }}</span>
+                <div>
+                    <p class="path__title">{{ cert.title if cert else title }}</p>
+                    <p class="path__meta">{{ 'Selesai ' ~ (cert.achieved | wib) if cert else 'Belum selesai' }}</p>
+                </div>
+            </div>
+            {% endfor %}
+            {% for cert in person.soc.other %}
+            <div class="path path--done">
+                <span class="path__icon">{{ ui.icon('check') }}</span>
+                <div>
+                    <p class="path__title">{{ cert.title or cert.name }}</p>
+                    <p class="path__meta">Selesai {{ cert.achieved | wib }}</p>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
 
-        function refreshUser() {
-            handleRefresh('/user/{{ user_data.username }}/refresh', document.getElementById('refresh-user-btn'));
-        }
-        function handleRefresh(url, btn) {
-            btn.disabled = true;
-            btn.innerText = 'Memperbarui...';
-            const reset = () => { btn.disabled = false; btn.innerText = 'Refresh Data'; };
-            fetch(url, { method: 'POST' })
-                .then(r => r.json())
-                .then(j => {
-                    if (j.status === 'started') {
-                        let left = j.eta_seconds || 60;
-                        const tick = () => {
-                            btn.innerText = 'Sync berjalan (' + left + ' dtk)...';
-                            if (left-- <= 0) window.location.reload(); else setTimeout(tick, 1000);
-                        };
-                        tick();
-                    } else if (j.status === 'throttled') {
-                        alert('Baru saja di-refresh. Coba lagi dalam ' + j.retry_after + ' detik.');
-                        reset();
-                    } else {
-                        alert('Refresh gagal: ' + (j.message || 'unknown'));
-                        reset();
-                    }
-                })
-                .catch(() => { alert('Permintaan refresh gagal'); reset(); });
-        }
-    </script>
-</body>
-</html>
+    <section class="card card__body" aria-labelledby="activity-title">
+        <div class="section-head">
+            <div>
+                <h2 id="activity-title" class="section-title">Aktivitas {{ person.year }}</h2>
+                <p class="section-desc"><span class="num">{{ person.year_total }}</span> aktivitas dalam <span class="num">{{ person.year_active_days }}</span> hari aktif</p>
+            </div>
+        </div>
+        <div class="heatmap">
+            <div class="heatmap__grid" role="img" aria-label="Kalender aktivitas {{ person.year }}: {{ person.year_total }} aktivitas dalam {{ person.year_active_days }} hari aktif">
+                {% set month_at = {} %}
+                {% for m in person.heatmap.months %}{% set _ = month_at.update({m.col: m.label}) %}{% endfor %}
+                {% for week in person.heatmap.weeks %}
+                    <span class="heatmap__month">{{ month_at.get(loop.index0, '') }}</span>
+                    {% for cell in week %}
+                        {% if cell %}
+                        <span class="heatmap__cell" data-level="{{ cell.level }}"{% if cell.future %} data-future="true"{% else %} data-tip="{{ cell.label }}: {{ cell.count }} aktivitas"{% endif %}></span>
+                        {% else %}
+                        <span class="heatmap__blank"></span>
+                        {% endif %}
+                    {% endfor %}
+                {% endfor %}
+            </div>
+        </div>
+        <div class="heatmap-foot">
+            <span class="subtle" style="font-size: var(--text-xs)">Arahkan kursor ke kotak untuk melihat jumlah per hari</span>
+            <span class="legend">
+                Sedikit
+                {% for l, rng in [(0, "0"), (1, "1–15"), (2, "16–50"), (3, "51–150"), (4, "> 150")] %}<span class="heatmap__cell" data-level="{{ l }}" data-tip="{{ rng }} aktivitas/hari"></span>{% endfor %}
+                Banyak
+            </span>
+        </div>
+    </section>
 
+    <section class="card card__body" aria-labelledby="badges-title">
+        <div class="section-head">
+            <div>
+                <h2 id="badges-title" class="section-title">Badge</h2>
+                <p class="section-desc">{{ person.badges | length }} badge, terbaru lebih dulu</p>
+            </div>
+        </div>
+        {% if person.badges %}
+        <div class="badges" data-collapsible="12">
+            {% for b in person.badges %}
+            <div class="badge-item" title="{{ b.description | striptags }}">
+                <img src="{{ b.image }}" alt="" loading="lazy">
+                <p class="badge-item__title">{{ b.title }}</p>
+                {% if b.earned_at %}<p class="badge-item__date">{{ b.earned_at | wib }}</p>{% endif %}
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty">{{ ui.icon('inbox') }}<p class="empty__title">Belum ada badge</p></div>
+        {% endif %}
+    </section>
+
+    <section class="card" aria-labelledby="rooms-title" data-rooms>
+        <div class="card__body" style="padding-bottom: 0">
+            <div class="section-head">
+                <div>
+                    <h2 id="rooms-title" class="section-title">Room selesai</h2>
+                    <p class="section-desc">{{ person.completed_rooms | length }} room</p>
+                </div>
+            </div>
+        </div>
+        {% if person.completed_rooms %}
+        {% set diffs = person.completed_rooms | map(attribute='difficulty') | map('lower') | list %}
+        <div class="toolbar">
+            <label class="input">
+                {{ ui.icon('search') }}
+                <span class="sr-only">Cari room</span>
+                <input type="search" placeholder="Cari room" data-search autocomplete="off">
+            </label>
+            <div class="segmented" role="group" aria-label="Filter tingkat kesulitan">
+                <button type="button" aria-pressed="true" data-filter="all">Semua</button>
+                {% for d in ['easy', 'medium', 'hard', 'info'] if d in diffs %}
+                <button type="button" aria-pressed="false" data-filter="{{ d }}">{{ d | capitalize }}<span class="count">{{ diffs | select('equalto', d) | list | length }}</span></button>
+                {% endfor %}
+            </div>
+            <span class="toolbar__end" data-result-count aria-live="polite"></span>
+        </div>
+        <div class="table-wrap">
+            <table class="table">
+                <thead>
+                    <tr><th scope="col">Room</th><th scope="col">Kesulitan</th><th scope="col" class="col-optional">Tipe</th></tr>
+                </thead>
+                <tbody>
+                    {% for r in person.completed_rooms %}
+                    <tr data-name="{{ (r.title or '') | lower }}" data-diff="{{ (r.difficulty or 'info') | lower }}">
+                        <td>
+                            <div class="room">
+                                <img src="{{ r.image_url }}" alt="" loading="lazy">
+                                <div>
+                                    <p class="room__title">{{ r.title }}</p>
+                                    <p class="room__desc">{{ r.description | striptags }}</p>
+                                </div>
+                            </div>
+                        </td>
+                        <td>{{ ui.difficulty(r.difficulty) }}</td>
+                        <td class="col-optional muted">{{ (r.type or '') | capitalize }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div class="empty" data-empty hidden>
+            {{ ui.icon('search') }}
+            <p class="empty__title">Tidak ada room yang cocok</p>
+        </div>
+        {% else %}
+        <div class="empty">{{ ui.icon('inbox') }}<p class="empty__title">Belum ada room yang diselesaikan</p></div>
+        {% endif %}
+    </section>
+</div>
+{% endif %}
+{% endblock %}

@@ -1,202 +1,108 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Visionet L2 Bootcamp Learning Progress Dashboard</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='favicon.svg') }}">
-    <link rel="apple-touch-icon" href="{{ url_for('static', filename='favicon.svg') }}">
-</head>
-<body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen text-gray-800 font-sans">
-    <!-- Loading Screen -->
-    <div id="loading-screen" class="fixed inset-0 bg-white flex items-center justify-center z-50 shadow-lg">
-        <div class="text-center bg-white p-6 md:p-8 rounded-lg shadow-2xl border max-w-sm mx-4">
-            <div class="animate-spin rounded-full h-12 w-12 md:h-16 md:w-16 border-b-4 border-blue-600 mx-auto mb-4 md:mb-6"></div>
-            <h2 class="text-lg md:text-xl font-bold text-gray-800 mb-2">Memuat Dashboard</h2>
-            <p class="text-sm md:text-lg font-medium text-gray-700 mb-2">Mengambil data dari API TryHackMe...</p>
-            <p class="text-xs md:text-sm text-gray-500">Mohon tunggu sebentar, proses ini mungkin memakan waktu beberapa detik</p>
-        </div>
-    </div>
+{% extends 'base.html' %}
+{% import '_components.html' as ui %}
 
-    <div class="max-w-full xl:max-w-[1400px] mx-auto px-4 md:px-8 py-8">
-        <h1 class="text-3xl md:text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600 text-center mb-4 md:mb-6 leading-loose pb-2 drop-shadow-sm">Visionet L2 Bootcamp Learning Progress Dashboard</h1>
+{% block title %}Ringkasan Tim{% endblock %}
 
+{% block header_actions %}
+    {{ ui.sync_status(sync) }}
+    {{ ui.refresh_button(url_for('refresh_all'), 'Refresh semua') }}
+{% endblock %}
 
-        <!-- Summary Table -->
-        <div class="bg-white/80 backdrop-blur-sm rounded-2xl shadow-2xl pt-4 pb-6 px-6 md:pt-6 md:pb-8 md:px-8 mb-8 border border-white/20">
-            <div class="flex items-center mb-4">
-                <div class="flex-1"></div>
-                <h2 class="text-xl md:text-2xl font-bold text-center flex-1 text-gray-800 bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">Team Progress Summary</h2>
-                <div class="flex-1 flex flex-col items-end gap-1">
-                    <button id="refresh-all-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg shadow" onclick="refreshAll()">Refresh Data</button>
-                    <span class="text-xs text-gray-500">Terakhir sync: {{ last_sync or 'belum pernah' }}</span>
-                </div>
-            </div>
-            <div class="overflow-x-auto">
-                <table class="w-full table-auto border-collapse border border-gray-300 rounded-lg overflow-hidden shadow-lg">
-                    <thead class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white">
-                        <tr>
-                            <th class="px-2 md:px-4 py-2 md:py-3 text-center font-semibold text-sm md:text-base">#</th>
-                            <th class="px-2 md:px-4 py-2 md:py-3 text-center font-semibold text-sm md:text-base">Avatar</th>
-                            <th class="px-2 md:px-4 py-2 md:py-3 text-center font-semibold text-sm md:text-base">Username</th>
-                            <th class="px-2 md:px-4 py-2 md:py-3 text-center font-semibold text-sm md:text-base">
-                                Name
-                                <span class="block text-xs md:text-sm text-green-600 font-bold bg-green-50 px-2 py-1 rounded-full border-2 border-green-300 shadow-md animate-pulse">Klik pada Nama untuk Detail</span>
-                            </th>
-                            <th class="px-2 md:px-4 py-2 md:py-3 text-center font-semibold text-sm md:text-base">Room Labs Completed</th>
-                            <th class="px-2 md:px-4 py-2 md:py-3 text-center font-semibold text-sm md:text-base whitespace-nowrap" title="Total pergerakan aktivitas di dalam platform selama 7 hari terakhir">Progress 7 Hari<span class="block text-[10px] font-normal text-blue-200 leading-tight">(aktivitas platform)</span></th>
-                            <th class="px-2 md:px-4 py-2 md:py-3 text-center font-semibold text-sm md:text-base">Status</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for user in data_list %}
-                        <tr class="{% if loop.index % 2 == 0 %}bg-blue-50/50{% else %}bg-white{% endif %} hover:bg-blue-100/50 transition-colors duration-200 cursor-pointer" data-username="{{ user.username }}">
-                            <td class="border border-gray-200 px-2 md:px-4 py-2 md:py-3 text-center font-bold text-lg">
-                                {% if loop.index == 1 %}
-                                    <span class="text-yellow-500 text-2xl">🥇</span>
-                                {% elif loop.index == 2 %}
-                                    <span class="text-gray-400 text-2xl">🥈</span>
-                                {% elif loop.index == 3 %}
-                                    <span class="text-orange-600 text-2xl">🥉</span>
-                                {% else %}
-                                    <span class="text-blue-600">{{ loop.index }}</span>
-                                {% endif %}
-                            </td>
-                            <td class="border border-gray-200 px-2 md:px-4 py-2 md:py-3 text-center">
-                                {% if user.avatar %}
-                                <img src="{{ user.avatar }}" alt="Avatar" class="w-10 h-10 md:w-12 md:h-12 rounded-full border-2 border-blue-300 shadow-md mx-auto hover:scale-110 transition-transform">
-                                {% endif %}
-                            </td>
-                            <td class="border border-gray-200 px-2 md:px-4 py-2 md:py-3 text-center font-medium text-sm">{{ user.username }}</td>
-                            <td class="border border-gray-200 px-2 md:px-4 py-2 md:py-3 text-center"><a href="{{ url_for('user_detail', username=user.username) }}" class="text-blue-600 hover:text-indigo-700 font-semibold hover:underline transition-colors text-sm md:text-base">{{ user.name }}</a></td>
-                            <td class="border border-gray-200 px-2 md:px-4 py-2 md:py-3 text-center font-bold text-green-600 text-sm md:text-base">{{ user.completed_rooms_number }}</td>
-                            <td class="border border-gray-200 px-2 md:px-4 py-2 md:py-3 text-center text-sm font-bold text-indigo-600">{{ user.weekly_activity_count }}</td>
-                            <td class="border border-gray-200 px-3 md:px-5 py-2 md:py-3 text-center min-w-[180px]">
-                                {% set soc_status = check_soc_completion(user.certificates or []) %}
-                                {% if soc_status.all_complete %}
-                                <div class="flex flex-col items-center gap-1">
-                                    <span class="inline-block bg-green-100 text-green-800 px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap">Completed All</span>
-                                    <div class="text-xs text-gray-600 flex flex-wrap justify-center gap-1">
-                                        <span class="inline-block bg-green-50 text-green-700 px-1.5 py-0.5 rounded text-xs">SOC Level 1 Path ✓</span>
-                                        <span class="inline-block bg-green-50 text-green-700 px-1.5 py-0.5 rounded text-xs">SOC Level 2 Path ✓</span>
-                                    </div>
-                                    {% if soc_status.other_paths %}
-                                    <div class="text-xs mt-1">
-                                        <span class="text-gray-400 text-[10px]">Other Path Completed:</span>
-                                        <div class="flex flex-wrap justify-center gap-1 mt-0.5">
-                                        {% for path in soc_status.other_paths %}
-                                        <span class="inline-block bg-purple-50 text-purple-700 px-1.5 py-0.5 rounded text-xs">{{ path|format_path_name }}</span>
-                                        {% endfor %}
-                                        </div>
-                                    </div>
-                                    {% endif %}
-                                </div>
-                                {% elif soc_status.soc_count > 0 %}
-                                <div class="flex flex-col items-center gap-1">
-                                    <span class="inline-block bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap">Completed {{ soc_status.soc_count }}/2</span>
-                                    <div class="text-xs text-gray-600 flex flex-wrap justify-center gap-1">
-                                        {% if soc_status.soc_l1 %}
-                                        <span class="inline-block bg-green-50 text-green-700 px-1.5 py-0.5 rounded text-xs">SOC Level 1 Path ✓</span>
-                                        {% else %}
-                                        <span class="inline-block bg-red-50 text-red-600 px-1.5 py-0.5 rounded text-xs">SOC Level 1 Path ✗</span>
-                                        {% endif %}
-                                        {% if soc_status.soc_l2 %}
-                                        <span class="inline-block bg-green-50 text-green-700 px-1.5 py-0.5 rounded text-xs">SOC Level 2 Path ✓</span>
-                                        {% else %}
-                                        <span class="inline-block bg-red-50 text-red-600 px-1.5 py-0.5 rounded text-xs">SOC Level 2 Path ✗</span>
-                                        {% endif %}
-                                    </div>
-                                    {% if soc_status.other_paths %}
-                                    <div class="text-xs mt-1">
-                                        <span class="text-gray-400 text-[10px]">Other Path Completed:</span>
-                                        <div class="flex flex-wrap justify-center gap-1 mt-0.5">
-                                        {% for path in soc_status.other_paths %}
-                                        <span class="inline-block bg-purple-50 text-purple-700 px-1.5 py-0.5 rounded text-xs">{{ path|format_path_name }}</span>
-                                        {% endfor %}
-                                        </div>
-                                    </div>
-                                    {% endif %}
-                                </div>
-                                {% elif user.certificates and user.certificates|length > 0 %}
-                                <div class="flex flex-col items-center gap-1">
-                                    <span class="inline-block bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap">Onprogress</span>
-                                    <div class="text-xs text-gray-500">
-                                        <span class="block">Target: SOC L1 & L2 Path</span>
-                                    </div>
-                                    <div class="text-xs mt-1">
-                                        <span class="text-gray-400 text-[10px]">Other Path Completed:</span>
-                                        <div class="flex flex-wrap justify-center gap-1 mt-0.5">
-                                        {% for cert in user.certificates %}
-                                        <span class="inline-block bg-purple-50 text-purple-700 px-1.5 py-0.5 rounded text-xs">{{ (cert.pathName or cert.name)|format_path_name }}</span>
-                                        {% endfor %}
-                                        </div>
-                                    </div>
-                                </div>
-                                {% else %}
-                                <div class="flex flex-col items-center gap-1">
-                                    <span class="inline-block bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap">Onprogress</span>
-                                    <div class="text-xs text-gray-500">
-                                        <span class="block">Target: SOC L1 & L2 Path</span>
-                                    </div>
-                                </div>
-                                {% endif %}
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+{% block content %}
+<div class="stack">
+    <section aria-labelledby="summary-title">
+        <div class="section-head">
+            <div>
+                <h1 id="summary-title" class="section-title">Ringkasan tim</h1>
+                <p class="section-desc">{{ summary.total }} peserta · progress TryHackMe dan jalur SOC</p>
             </div>
         </div>
+        <div class="stats">
+            {{ ui.stat('Aktif 7 hari terakhir', summary.active, meta=(summary.total - summary.active) ~ ' peserta belum ada aktivitas minggu ini', suffix='/ ' ~ summary.total) }}
+            {{ ui.stat('Room diselesaikan', summary.rooms_total | thousands, meta='Rata-rata ' ~ summary.rooms_avg ~ ' room per peserta') }}
+            {{ ui.stat('SOC Level 1 selesai', summary.soc_l1, meta='Sertifikat jalur SOC L1', suffix='/ ' ~ summary.total) }}
+            {{ ui.stat('SOC Level 2 selesai', summary.soc_l2, meta='Sertifikat jalur SOC L2', suffix='/ ' ~ summary.total) }}
+        </div>
+    </section>
 
-        <!-- Footer -->
-        <footer class="text-center mt-12 md:mt-16 py-6 md:py-8 bg-white/60 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20">
-            <p class="text-gray-700 text-sm md:text-lg">&copy; {{ current_year }} Made with ❤️ by <a href="https://notes.anggipradana.com" target="_blank" class="text-blue-600 hover:text-indigo-700 font-bold hover:underline transition-colors">Anggi Pradana</a></p>
-        </footer>
-    </div>
+    <section class="card" aria-labelledby="board-title" data-board>
+        <div class="toolbar">
+            <h2 id="board-title" class="sr-only">Leaderboard peserta</h2>
+            <label class="input">
+                {{ ui.icon('search') }}
+                <span class="sr-only">Cari peserta</span>
+                <input type="search" placeholder="Cari nama atau username" data-search autocomplete="off">
+            </label>
+            {% set idle = people | rejectattr('active') | list | length %}
+            {% set no_l1 = people | selectattr('soc.l1', 'none') | list | length %}
+            <div class="segmented" role="group" aria-label="Filter peserta">
+                <button type="button" aria-pressed="true" data-filter="all">Semua<span class="count">{{ people | length }}</span></button>
+                <button type="button" aria-pressed="false" data-filter="idle">Tidak aktif<span class="count">{{ idle }}</span></button>
+                <button type="button" aria-pressed="false" data-filter="no-l1">Belum SOC L1<span class="count">{{ no_l1 }}</span></button>
+            </div>
+            <span class="toolbar__end" data-result-count aria-live="polite"></span>
+        </div>
 
-    <script>
-        // Hide loading screen when page is loaded
-        window.addEventListener('load', function() {
-            document.getElementById('loading-screen').style.display = 'none';
-        });
-
-        // Make table rows clickable
-        document.addEventListener('DOMContentLoaded', function() {
-            const rows = document.querySelectorAll('tbody tr[data-username]');
-            rows.forEach(row => {
-                row.addEventListener('click', function() {
-                    const username = this.getAttribute('data-username');
-                    window.location.href = '/user/' + username;
-                });
-            });
-            window.refreshAll = () => handleRefresh('/refresh_all', document.getElementById('refresh-all-btn'));
-        });
-        function handleRefresh(url, btn) {
-            btn.disabled = true;
-            btn.innerText = 'Memperbarui...';
-            const reset = () => { btn.disabled = false; btn.innerText = 'Refresh Data'; };
-            fetch(url, { method: 'POST' })
-                .then(r => r.json())
-                .then(j => {
-                    if (j.status === 'started') {
-                        let left = j.eta_seconds || 60;
-                        const tick = () => {
-                            btn.innerText = 'Sync berjalan (' + left + ' dtk)...';
-                            if (left-- <= 0) window.location.reload(); else setTimeout(tick, 1000);
-                        };
-                        tick();
-                    } else if (j.status === 'throttled') {
-                        alert('Baru saja di-refresh. Coba lagi dalam ' + j.retry_after + ' detik.');
-                        reset();
-                    } else {
-                        alert('Refresh gagal: ' + (j.message || 'unknown'));
-                        reset();
-                    }
-                })
-                .catch(() => { alert('Permintaan refresh gagal'); reset(); });
-        }
-    </script>
-</body>
-</html>
-
+        {% if people %}
+        <div class="table-wrap">
+            <table class="table" data-sortable>
+                <thead>
+                    <tr>
+                        <th scope="col" class="pos" aria-sort="ascending"><button type="button" data-sort="position" data-type="num">#{{ ui.icon('sort', 'icon sort-icon') }}</button></th>
+                        <th scope="col" aria-sort="none"><button type="button" data-sort="name" data-type="text">Peserta{{ ui.icon('sort', 'icon sort-icon') }}</button></th>
+                        <th scope="col" aria-sort="none"><button type="button" data-sort="rooms" data-type="num">Room selesai{{ ui.icon('sort', 'icon sort-icon') }}</button></th>
+                        <th scope="col" class="right col-optional" aria-sort="none"><button type="button" data-sort="badges" data-type="num">Badge{{ ui.icon('sort', 'icon sort-icon') }}</button></th>
+                        <th scope="col" class="right col-optional" aria-sort="none"><button type="button" data-sort="points" data-type="num">Poin{{ ui.icon('sort', 'icon sort-icon') }}</button></th>
+                        <th scope="col" aria-sort="none"><button type="button" data-sort="weekly" data-type="num">7 hari terakhir{{ ui.icon('sort', 'icon sort-icon') }}</button></th>
+                        <th scope="col">Jalur SOC</th>
+                        <th scope="col" aria-sort="none"><button type="button" data-sort="idle" data-type="num">Status{{ ui.icon('sort', 'icon sort-icon') }}</button></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for p in people %}
+                    <tr data-href="{{ url_for('user_detail', username=p.username) }}"
+                        data-position="{{ p.position }}" data-name="{{ p.name | lower }}" data-username="{{ p.username | lower }}"
+                        data-rooms="{{ p.rooms }}" data-badges="{{ p.badges_number }}" data-points="{{ p.points }}"
+                        data-weekly="{{ p.weekly }}" data-idle="{{ -1 if p.active else (p.days_idle if p.days_idle is not none else 9999) }}"
+                        data-is-idle="{{ 'false' if p.active else 'true' }}" data-no-l1="{{ 'false' if p.soc.l1 else 'true' }}">
+                        <td class="pos c-pos">{{ p.position }}</td>
+                        <td class="c-person">
+                            <div class="person">
+                                {{ ui.avatar(p) }}
+                                <div>
+                                    <a class="person__name" href="{{ url_for('user_detail', username=p.username) }}">{{ p.name }}</a>
+                                    <div class="person__user">@{{ p.username }}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="c-rooms">
+                            <div class="meter" title="{{ p.rooms }} room">
+                                <span class="meter__value">{{ p.rooms }}</span>
+                                <span class="meter__track" aria-hidden="true"><span class="meter__fill" style="width: {{ (p.rooms / summary.max_rooms * 100) | round(1) }}%"></span></span>
+                            </div>
+                        </td>
+                        <td class="right num col-optional">{{ p.badges_number }}</td>
+                        <td class="right num col-optional">{{ p.points | thousands }}</td>
+                        <td class="c-week">{{ ui.week_strip(p) }}</td>
+                        <td class="c-soc">{{ ui.soc_tags(p.soc) }}</td>
+                        <td class="c-status">{{ ui.activity_status(p) }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div class="empty" data-empty hidden>
+            {{ ui.icon('search') }}
+            <p class="empty__title">Tidak ada peserta yang cocok</p>
+            <p>Coba kata kunci lain atau ubah filter.</p>
+        </div>
+        {% else %}
+        <div class="empty">
+            {{ ui.icon('inbox') }}
+            <p class="empty__title">Belum ada data</p>
+            <p>Collector belum pernah berhasil sync. Coba tombol Refresh semua.</p>
+        </div>
+        {% endif %}
+    </section>
+</div>
+{% endblock %}

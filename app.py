@@ -1,5 +1,4 @@
-from flask import Flask, render_template, jsonify
-from datetime import datetime, timedelta, timezone
+from datetime import date, datetime, timedelta, timezone
 import json
 import os
 import subprocess
@@ -7,6 +6,7 @@ import sys
 import time
 
 import requests
+from flask import Flask, jsonify, render_template
 
 app = Flask(__name__)
 
@@ -21,9 +21,13 @@ with open(os.path.join(BASE_DIR, 'users.json')) as f:
 COLLECTOR_URL = os.environ.get('COLLECTOR_URL', '').rstrip('/')
 COLLECTOR_SECRET = os.environ.get('COLLECTOR_SECRET', '')
 DATA_FILE = os.path.join(BASE_DIR, 'data', 'thm.json')
-_REMOTE_CACHE = {'ts': 0, 'data': None}
+_REMOTE_CACHE = {'ts': 0, 'data': None, 'ok': False}
 REMOTE_CACHE_TTL = 30  # seconds
+STALE_AFTER = timedelta(hours=1)  # sync runs every 15 min; older than this means something is wrong
+WIB = timezone(timedelta(hours=7))
 
+
+# --------------------------------------------------------------------------- data source
 
 def _collector(method, path, **kw):
     return requests.request(method, f'{COLLECTOR_URL}{path}', timeout=8,
@@ -31,162 +35,198 @@ def _collector(method, path, **kw):
 
 
 def _load_store():
+    """Return (store, reachable)."""
     if COLLECTOR_URL:
         if _REMOTE_CACHE['data'] and time.time() - _REMOTE_CACHE['ts'] < REMOTE_CACHE_TTL:
-            return _REMOTE_CACHE['data']
+            return _REMOTE_CACHE['data'], _REMOTE_CACHE['ok']
         try:
             r = _collector('GET', '/api/data')
             r.raise_for_status()
-            _REMOTE_CACHE.update(ts=time.time(), data=r.json())
+            _REMOTE_CACHE.update(ts=time.time(), data=r.json(), ok=True)
         except (requests.RequestException, ValueError):
-            pass  # collector unreachable: serve the last copy we had, if any
-        return _REMOTE_CACHE['data'] or {'users': {}}
+            _REMOTE_CACHE.update(ts=time.time(), ok=False)  # serve the last copy we had, if any
+        return _REMOTE_CACHE['data'] or {'users': {}}, _REMOTE_CACHE['ok']
     try:
         with open(DATA_FILE) as f:
-            return json.load(f)
+            return json.load(f), True
     except (FileNotFoundError, ValueError):
-        return {'users': {}}
+        return {'users': {}}, True
 
 
-def _weekly_count(activity):
-    """Total activity over the last 7 days (including today)."""
-    today = datetime.now().date()
-    week_ago = today - timedelta(days=6)
-    total = 0
-    for item in activity:
-        try:
-            d = datetime.strptime(item['date'], '%Y-%m-%d').date()
-        except (KeyError, ValueError):
-            continue
-        if week_ago <= d <= today:
-            total += item.get('count', 0)
-    return total
+# --------------------------------------------------------------------------- view model
 
-
-def _fmt_ts(iso):
-    """ISO UTC timestamp -> 'dd-mm-YYYY HH:MM WIB'."""
-    if not iso:
-        return None
+def _parse_iso(iso):
     try:
-        dt = datetime.fromisoformat(iso).astimezone(timezone(timedelta(hours=7)))
-        return dt.strftime('%d-%m-%Y %H:%M WIB')
+        return datetime.fromisoformat(iso.replace('Z', '+00:00')) if iso else None
     except ValueError:
-        return iso
+        return None
 
 
-def get_user_data(user_info, store=None):
-    store = store if store is not None else _load_store()
+def _fmt_wib(iso, fmt='%d %b %Y, %H:%M WIB'):
+    dt = _parse_iso(iso)
+    return dt.astimezone(WIB).strftime(fmt) if dt else None
+
+
+def activity_level(count):
+    """Fixed thresholds (not per-user quantiles) so heatmaps are comparable across people.
+    Calibrated on the cohort's active days: median ~40, p75 ~110, p90 ~210 activities/day."""
+    if count <= 0:
+        return 0
+    if count <= 15:
+        return 1
+    if count <= 50:
+        return 2
+    if count <= 150:
+        return 3
+    return 4
+
+
+def _activity_map(activity):
+    return {a['date']: a['count'] for a in activity}
+
+
+def _week_strip(amap, today):
+    days = [today - timedelta(days=i) for i in range(6, -1, -1)]
+    return [{'date': d.isoformat(), 'label': d.strftime('%a %d %b'), 'count': amap.get(d.isoformat(), 0),
+             'level': activity_level(amap.get(d.isoformat(), 0))} for d in days]
+
+
+def _days_since_active(amap, today):
+    active_days = [d for d, c in amap.items() if c > 0 and d <= today.isoformat()]
+    if not active_days:
+        return None
+    return (today - date.fromisoformat(max(active_days))).days
+
+
+def _heatmap(amap, year, today):
+    """GitHub-style calendar: list of week columns (Mon-first), each with 7 cells (None = outside year)."""
+    start, end = date(year, 1, 1), date(year, 12, 31)
+    cursor = start - timedelta(days=start.weekday())
+    weeks, months = [], []
+    while cursor <= end:
+        col = []
+        for i in range(7):
+            d = cursor + timedelta(days=i)
+            if d.year != year:
+                col.append(None)
+            else:
+                c = amap.get(d.isoformat(), 0)
+                col.append({'date': d.isoformat(), 'label': d.strftime('%d %b %Y'), 'count': c,
+                            'level': activity_level(c), 'future': d > today})
+        first_of_month = next((x for x in col if x and x['date'].endswith('-01')), None)
+        if first_of_month:  # label the month above the week column that contains its 1st
+            months.append({'label': date.fromisoformat(first_of_month['date']).strftime('%b'), 'col': len(weeks)})
+        weeks.append(col)
+        cursor += timedelta(days=7)
+    return {'weeks': weeks, 'months': months}
+
+
+def soc_status(certificates):
+    l1 = l2 = None
+    other = []
+    for c in certificates:
+        key = (c.get('name') or '').lower().replace('-', '').replace('_', '').replace(' ', '')
+        if 'soclevel1' in key:
+            l1 = c
+        elif 'soclevel2' in key:
+            l2 = c
+        else:
+            other.append(c)
+    return {'l1': l1, 'l2': l2, 'count': (l1 is not None) + (l2 is not None), 'other': other}
+
+
+def get_user_data(user_info, store):
     entry = store.get('users', {}).get(user_info['username'], {})
     p = entry.get('profile') or {}
-    today = datetime.now().strftime('%Y-%m-%d')
-    activity = [a for a in entry.get('activity', []) if a['date'] <= today]  # API returns the whole year
+    today = datetime.now(timezone.utc).date()
+    amap = _activity_map(entry.get('activity', []))
+    year = entry.get('activity_year', today.year)
+    year_activity = {d: c for d, c in amap.items() if d <= today.isoformat()}
+    week = _week_strip(amap, today)
+    weekly = sum(d['count'] for d in week)
+    days_idle = _days_since_active(amap, today)
 
     return {
         'username': user_info['username'],
-        'name': user_info.get('full_name') if p else 'Data not found',
-        'rank': p.get('rank', 'N/A'),
-        'points': p.get('totalPoints', 0),
+        'name': user_info.get('full_name') or user_info['username'],
+        'has_data': bool(p),
+        'rank': p.get('rank'),
+        'points': round(p.get('totalPoints') or 0),
         'level': p.get('level'),
         'top_percentage': p.get('topPercentage'),
-        'league_tier': p.get('leagueTier'),
-        'completed_rooms_number': p.get('completedRoomsNumber') or 0,
+        'rooms': p.get('completedRoomsNumber') or 0,
         'badges_number': p.get('badgesNumber') or 0,
-        'avatar': p.get('avatar', ''),
-        'country': p.get('country', ''),
-        'streak': p.get('streak', 0),
-        'badge_image_url': p.get('badgeImageURL', ''),
-        'learning_path': user_info['learning_path'],
-        'role': user_info['role'],
+        'avatar': p.get('avatar') or '',
+        'country': (p.get('country') or '').upper(),
+        'streak': p.get('streak') or 0,
         'completed_rooms': entry.get('completed_rooms', []),
-        'badges': entry.get('badges', []),
-        'certificates': entry.get('certificates', []),
-        'activity': activity,
-        'current_year': entry.get('activity_year', datetime.now().year),
-        'weekly_activity_count': _weekly_count(activity),
-        'fetched_at': _fmt_ts(entry.get('fetched_at')),
+        'badges': sorted(entry.get('badges', []), key=lambda b: b.get('earned_at') or '', reverse=True),
+        'soc': soc_status(entry.get('certificates', [])),
+        'week': week,
+        'weekly': weekly,
+        'active': weekly > 0,
+        'days_idle': days_idle,
+        'year': year,
+        'year_total': sum(year_activity.values()),
+        'year_active_days': sum(1 for c in year_activity.values() if c > 0),
+        'heatmap': _heatmap(amap, year, today),
+        'fetched_at': entry.get('fetched_at'),
+        'fetched_at_fmt': _fmt_wib(entry.get('fetched_at')),
         'last_error': entry.get('last_error'),
     }
 
 
-@app.template_filter('datetimeformat')
-def datetimeformat(value, format='%d-%m-%Y %H:%M'):
-    if value:
-        date = datetime.strptime(value, '%Y-%m-%dT%H:%M:%S.%fZ')
-        return date.strftime(format)
-    else:
-        return ''
+def sync_info(store, reachable):
+    last = _parse_iso(store.get('last_run'))
+    stale = last is None or datetime.now(timezone.utc) - last > STALE_AFTER
+    return {'iso': store.get('last_run'), 'fmt': _fmt_wib(store.get('last_run')),
+            'stale': stale, 'reachable': reachable}
 
-# Mapping untuk nama path yang lebih rapi
-PATH_NAME_MAP = {
-    'pathway-soclevel1': 'SOC Level 1',
-    'pathway-soclevel2': 'SOC Level 2',
-    'soc-level-1': 'SOC Level 1',
-    'soc-level-2': 'SOC Level 2',
-    'soclevel1': 'SOC Level 1',
-    'soclevel2': 'SOC Level 2',
-    'pathway-soclevel2-legacy': 'SOC Level 2 (Legacy)',
-}
 
-@app.template_filter('format_path_name')
-def format_path_name(value):
-    """Format path name to be more readable."""
-    if not value:
-        return 'Path'
+@app.template_filter('wib')
+def wib_filter(iso, fmt='%d %b %Y'):
+    return _fmt_wib(iso, fmt) or ''
 
-    # Cek di mapping
-    value_lower = value.lower().replace(' ', '-').replace('_', '-')
-    if value_lower in PATH_NAME_MAP:
-        return PATH_NAME_MAP[value_lower]
 
-    # Jika tidak ada di mapping, format manual
-    # Contoh: "pathway-soclevel1" -> "Pathway Soclevel1"
-    formatted = value.replace('-', ' ').replace('_', ' ').title()
-    return formatted
+@app.template_filter('thousands')
+def thousands_filter(n):
+    if n is None:
+        return '–'
+    if isinstance(n, float):
+        n = round(n)  # THM sometimes returns points as a float (e.g. 15649.399999999987)
+    return f'{n:,}'.replace(',', '.') if isinstance(n, int) else n
 
-def check_soc_completion(certificates):
-    """Check if SOC Level 1 and SOC Level 2 are completed."""
-    soc_l1_done = False
-    soc_l2_done = False
-    other_paths = []
 
-    for cert in certificates:
-        path_name = cert.get('pathName') or cert.get('name') or ''
-        path_lower = path_name.lower().replace(' ', '').replace('-', '').replace('_', '')
-
-        if 'soclevel1' in path_lower or 'socl1' in path_lower or 'soc1' in path_lower:
-            soc_l1_done = True
-        elif 'soclevel2' in path_lower or 'socl2' in path_lower or 'soc2' in path_lower:
-            soc_l2_done = True
-        else:
-            other_paths.append(path_name)
-
-    return {
-        'soc_l1': soc_l1_done,
-        'soc_l2': soc_l2_done,
-        'soc_count': (1 if soc_l1_done else 0) + (1 if soc_l2_done else 0),
-        'all_complete': soc_l1_done and soc_l2_done,
-        'other_paths': other_paths
-    }
-
-app.jinja_env.globals['check_soc_completion'] = check_soc_completion
+# --------------------------------------------------------------------------- routes
 
 @app.route('/')
 def index():
-    store = _load_store()
-    data_list = [get_user_data(u, store) for u in users_info]
-    data_list.sort(key=lambda x: x.get('completed_rooms_number', 0), reverse=True)
-    return render_template('index.html', data_list=data_list, current_year=datetime.now().year,
-                           last_sync=_fmt_ts(store.get('last_run')))
+    store, reachable = _load_store()
+    people = [get_user_data(u, store) for u in users_info]
+    people.sort(key=lambda x: (x['rooms'], x['points']), reverse=True)
+    for i, person in enumerate(people, 1):
+        person['position'] = i
+    n = len(people)
+    summary = {
+        'total': n,
+        'active': sum(p['active'] for p in people),
+        'rooms_total': sum(p['rooms'] for p in people),
+        'rooms_avg': round(sum(p['rooms'] for p in people) / n) if n else 0,
+        'soc_l1': sum(p['soc']['l1'] is not None for p in people),
+        'soc_l2': sum(p['soc']['l2'] is not None for p in people),
+        'max_rooms': max((p['rooms'] for p in people), default=0) or 1,
+    }
+    return render_template('index.html', people=people, summary=summary, sync=sync_info(store, reachable))
 
 
 @app.route('/user/<username>')
 def user_detail(username):
     user_info = next((u for u in users_info if u['username'] == username), None)
+    store, reachable = _load_store()
     if not user_info:
-        return render_template('user_detail.html', user_data=None)
-    user_data = get_user_data(user_info)
-    return render_template('user_detail.html', user_data=user_data, rooms=user_data['completed_rooms'],
-                           activity=user_data['activity'], current_year=user_data['current_year'])
+        return render_template('user_detail.html', person=None, sync=sync_info(store, reachable)), 404
+    return render_template('user_detail.html', person=get_user_data(user_info, store),
+                           sync=sync_info(store, reachable))
 
 
 def _trigger_refresh(username=None):
@@ -196,7 +236,7 @@ def _trigger_refresh(username=None):
             _REMOTE_CACHE['ts'] = 0  # next page load fetches fresh data
             return jsonify(r.json()), r.status_code
         except (requests.RequestException, ValueError):
-            return jsonify({'status': 'error', 'message': 'collector tidak bisa dihubungi'}), 502
+            return jsonify({'status': 'error', 'message': 'Collector tidak bisa dihubungi'}), 502
     cmd = [sys.executable, os.path.join(BASE_DIR, 'collector.py')] + ([username] if username else [])
     subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)
     return jsonify({'status': 'started', 'eta_seconds': 10 if username else 120})
@@ -205,7 +245,7 @@ def _trigger_refresh(username=None):
 @app.route('/user/<username>/refresh', methods=['POST'])
 def refresh_user(username):
     if not any(u['username'] == username for u in users_info):
-        return jsonify({'status': 'error', 'message': 'user not found'}), 404
+        return jsonify({'status': 'error', 'message': 'User tidak ditemukan'}), 404
     return _trigger_refresh(username)
 
 
