@@ -41,7 +41,10 @@
                         <p class="text-gray-700 text-sm md:text-base lg:text-lg"><strong class="text-blue-600">Badge:</strong> {{ user_data.badges_number }}</p>
                         <p class="text-gray-700 text-sm md:text-base lg:text-lg"><strong class="text-blue-600">Negara:</strong> {{ user_data.country | upper }}</p>
                         <p class="text-gray-700 text-sm md:text-base lg:text-lg"><strong class="text-blue-600">Streak:</strong> {{ user_data.streak }}</p>
+                        {% if user_data.level %}<p class="text-gray-700 text-sm md:text-base lg:text-lg"><strong class="text-blue-600">Level:</strong> {{ user_data.level }}</p>{% endif %}
+                        {% if user_data.top_percentage %}<p class="text-gray-700 text-sm md:text-base lg:text-lg"><strong class="text-blue-600">Top:</strong> {{ user_data.top_percentage }}%</p>{% endif %}
                     </div>
+                    <p class="text-xs text-gray-500 mt-4">Data per: {{ user_data.fetched_at or 'belum pernah sync' }}{% if user_data.last_error %} · <span class="text-red-600">sync terakhir gagal, menampilkan data lama</span>{% endif %}</p>
                 </div>
             </div>
         </div>
@@ -330,24 +333,31 @@
         });
 
         function refreshUser() {
-            const btn = document.getElementById('refresh-user-btn');
+            handleRefresh('/user/{{ user_data.username }}/refresh', document.getElementById('refresh-user-btn'));
+        }
+        function handleRefresh(url, btn) {
             btn.disabled = true;
             btn.innerText = 'Memperbarui...';
-            fetch('/user/{{ user_data.username }}/refresh', { method: 'POST' })
+            const reset = () => { btn.disabled = false; btn.innerText = 'Refresh Data'; };
+            fetch(url, { method: 'POST' })
                 .then(r => r.json())
                 .then(j => {
-                    if (j.status === 'ok') window.location.reload();
-                    else {
+                    if (j.status === 'started') {
+                        let left = j.eta_seconds || 60;
+                        const tick = () => {
+                            btn.innerText = 'Sync berjalan (' + left + ' dtk)...';
+                            if (left-- <= 0) window.location.reload(); else setTimeout(tick, 1000);
+                        };
+                        tick();
+                    } else if (j.status === 'throttled') {
+                        alert('Baru saja di-refresh. Coba lagi dalam ' + j.retry_after + ' detik.');
+                        reset();
+                    } else {
                         alert('Refresh gagal: ' + (j.message || 'unknown'));
-                        btn.disabled = false;
-                        btn.innerText = 'Refresh Data';
+                        reset();
                     }
                 })
-                .catch(err => {
-                    alert('Permintaan refresh gagal');
-                    btn.disabled = false;
-                    btn.innerText = 'Refresh Data';
-                });
+                .catch(() => { alert('Permintaan refresh gagal'); reset(); });
         }
     </script>
 </body>
