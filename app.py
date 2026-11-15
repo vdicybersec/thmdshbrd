@@ -1,4 +1,5 @@
 from datetime import date, datetime, timedelta, timezone
+import hashlib
 import json
 import os
 import subprocess
@@ -6,7 +7,7 @@ import sys
 import time
 
 import requests
-from flask import Flask, jsonify, redirect, render_template, url_for
+from flask import Flask, jsonify, redirect, render_template, request, url_for
 
 from curriculum import Curriculum, burnup
 
@@ -24,7 +25,7 @@ COLLECTOR_URL = os.environ.get('COLLECTOR_URL', '').rstrip('/')
 COLLECTOR_SECRET = os.environ.get('COLLECTOR_SECRET', '')
 DATA_FILE = os.path.join(BASE_DIR, 'data', 'thm.json')
 _REMOTE_CACHE = {'ts': 0, 'data': None, 'ok': False}
-REMOTE_CACHE_TTL = 30  # seconds
+REMOTE_CACHE_TTL = 60  # seconds
 STALE_AFTER = timedelta(hours=1)  # sync runs every 15 min; older than this means something is wrong
 WIB = timezone(timedelta(hours=7))
 CUR = Curriculum()
@@ -276,6 +277,37 @@ def thousands_filter(n):
 
 
 # --------------------------------------------------------------------------- routes
+
+def _asset_version(*names):
+    h = hashlib.sha1()
+    for n in names:
+        with open(os.path.join(BASE_DIR, 'static', n), 'rb') as f:
+            h.update(f.read())
+    return h.hexdigest()[:10]
+
+
+ASSET_V = _asset_version('css/app.css', 'js/app.js')  # changes on every deploy that edits them
+
+
+@app.context_processor
+def inject_asset_version():
+    return {'asset_v': ASSET_V}
+
+
+@app.after_request
+def cache_headers(resp):
+    # Pages are the same for every visitor and data changes at most every 15 minutes, so let the
+    # Vercel CDN serve them: fresh for 60 s, then stale copies are served instantly while one
+    # request regenerates in the background. Visitors never wait for a cold start + collector fetch.
+    if request.method == 'GET' and resp.status_code == 200 and resp.mimetype == 'text/html':
+        resp.headers['Cache-Control'] = 'public, max-age=0, must-revalidate'
+        resp.headers['CDN-Cache-Control'] = 'public, s-maxage=60, stale-while-revalidate=86400'
+    elif request.path.startswith('/static/'):
+        # css/js URLs carry ?v=<content hash>, so they can be cached for a long time.
+        resp.headers['Cache-Control'] = 'public, max-age=31536000, immutable' if request.args.get('v') \
+            else 'public, max-age=86400'
+    return resp
+
 
 @app.route('/favicon.ico')
 def favicon():

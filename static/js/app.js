@@ -67,7 +67,12 @@
           toast(`Sync berjalan. Halaman akan dimuat ulang otomatis dalam ±${left} detik.`, 5000);
           const tick = () => {
             label.textContent = `Sinkronisasi… ${left} dtk`;
-            if (left-- <= 0) window.location.reload();
+            if (left-- <= 0) {
+              // New query string = new CDN cache key, so the reload shows the fresh data.
+              const u = new URL(window.location.href);
+              u.searchParams.set('t', Date.now());
+              window.location.replace(u);
+            }
             else setTimeout(tick, 1000);
           };
           tick();

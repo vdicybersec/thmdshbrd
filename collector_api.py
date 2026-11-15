@@ -2,11 +2,12 @@
 Collector API: runs on the collector host (residential exit available), exposed to the
 Vercel dashboard via Tailscale Funnel. Only two endpoints, both require the shared secret:
 
-    GET  /api/data                      -> contents of data/thm.json
+    GET  /api/data                      -> data/thm.json, only users in users.json (gzip if accepted)
     POST /api/refresh[?username=<u>]    -> start a background collector run (rate limited)
 
 Run: gunicorn -b 127.0.0.1:8100 collector_api:app   (COLLECTOR_SECRET in the environment)
 """
+import gzip
 import hmac
 import json
 import os
@@ -40,11 +41,21 @@ def require_secret():
 
 @app.get('/api/data')
 def data():
+    # Only the current participants: the store still holds earlier batches, which would make the
+    # dashboard download several times more data on every cold start.
     try:
-        with open(collector.DATA_FILE, 'rb') as f:
-            return Response(f.read(), mimetype='application/json')
-    except FileNotFoundError:
-        return jsonify({'users': {}})
+        with open(collector.DATA_FILE) as f:
+            store = json.load(f)
+    except (FileNotFoundError, ValueError):
+        store = {'users': {}}
+    store['users'] = {k: v for k, v in store.get('users', {}).items() if k in USERNAMES}
+    body = json.dumps(store, ensure_ascii=False, separators=(',', ':')).encode()
+    resp = Response(body, mimetype='application/json')
+    if 'gzip' in request.headers.get('Accept-Encoding', ''):
+        resp.set_data(gzip.compress(body, 6))
+        resp.headers['Content-Encoding'] = 'gzip'
+    resp.headers['Vary'] = 'Accept-Encoding'
+    return resp
 
 
 def _last_triggered(key):
