@@ -53,6 +53,91 @@
         </div>
     </section>
 
+    <section class="card" aria-labelledby="board-title" data-board>
+        <div class="toolbar">
+            <h2 id="board-title" class="section-title">Semua peserta</h2>
+            <label class="input">
+                {{ ui.icon('search') }}
+                <span class="sr-only">Cari peserta</span>
+                <input type="search" placeholder="Cari nama atau username" data-search autocomplete="off">
+            </label>
+            {% set idle = people | rejectattr('active') | list | length %}
+            {% set behind = people | rejectattr('cur.status', 'equalto', 'ok') | list | length %}
+            <div class="segmented" role="group" aria-label="Filter peserta">
+                <button type="button" aria-pressed="true" data-filter="all">Semua<span class="count">{{ people | length }}</span></button>
+                <button type="button" aria-pressed="false" data-filter="idle">Tidak aktif<span class="count">{{ idle }}</span></button>
+                <button type="button" aria-pressed="false" data-filter="behind">Tertinggal<span class="count">{{ behind }}</span></button>
+            </div>
+            <span class="toolbar__end"><span data-result-count aria-live="polite"></span></span>
+        </div>
+        <p class="table-hint">{{ ui.icon('pointer') }}Klik baris peserta untuk melihat detail progress, badge, dan room</p>
+
+        {% if people %}
+        <div class="table-wrap">
+            <table class="table" data-sortable>
+                <thead>
+                    <tr>
+                        <th scope="col" class="pos" aria-sort="ascending"><button type="button" data-sort="position" data-type="num">#{{ ui.icon('sort', 'icon sort-icon') }}</button></th>
+                        <th scope="col" aria-sort="none"><button type="button" data-sort="name" data-type="text">Peserta{{ ui.icon('sort', 'icon sort-icon') }}</button></th>
+                        <th scope="col" aria-sort="none"><button type="button" data-sort="cur" data-type="num">Kurikulum{{ ui.icon('sort', 'icon sort-icon') }}</button></th>
+                        <th scope="col" class="right col-optional" aria-sort="none"><button type="button" data-sort="rooms" data-type="num">Total room{{ ui.icon('sort', 'icon sort-icon') }}</button></th>
+                        <th scope="col" class="right col-optional" aria-sort="none"><button type="button" data-sort="badges" data-type="num">Badge{{ ui.icon('sort', 'icon sort-icon') }}</button></th>
+                        <th scope="col" class="right col-optional" aria-sort="none"><button type="button" data-sort="points" data-type="num">Poin{{ ui.icon('sort', 'icon sort-icon') }}</button></th>
+                        <th scope="col" aria-sort="none"><button type="button" data-sort="weekly" data-type="num">7 hari terakhir{{ ui.icon('sort', 'icon sort-icon') }}</button></th>
+                        <th scope="col" aria-sort="none"><button type="button" data-sort="idle" data-type="num">Status{{ ui.icon('sort', 'icon sort-icon') }}</button></th>
+                        <th scope="col" class="c-go"><span class="sr-only">Detail</span></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for p in people %}
+                    <tr data-href="{{ url_for('user_detail', username=p.username) }}"
+                        data-position="{{ p.position }}" data-name="{{ p.name | lower }}" data-username="{{ p.username | lower }}"
+                        data-rooms="{{ p.rooms }}" data-cur="{{ p.cur.done }}" data-badges="{{ p.badges_number }}" data-points="{{ p.points }}"
+                        data-weekly="{{ p.weekly }}" data-idle="{{ -1 if p.active else (p.days_idle if p.days_idle is not none else 9999) }}"
+                        data-is-idle="{{ 'false' if p.active else 'true' }}" data-behind="{{ 'false' if p.cur.status == 'ok' else 'true' }}">
+                        <td class="pos c-pos">{{ p.position }}</td>
+                        <td class="c-person">
+                            <div class="person">
+                                {{ ui.avatar(p) }}
+                                <div>
+                                    <a class="person__name" href="{{ url_for('user_detail', username=p.username) }}">{{ p.name }}</a>
+                                    <div class="person__user">@{{ p.username }}</div>
+                                    {{ ui.badge_row(p) }}
+                                </div>
+                            </div>
+                        </td>
+                        <td class="c-rooms">
+                            <div class="meter" title="{{ p.cur.done }} dari {{ p.cur.total }} room kurikulum">
+                                <span class="meter__value">{{ p.cur.done }}</span>
+                                <span class="meter__track" aria-hidden="true"><span class="meter__fill" style="width: {{ (p.cur.pct * 100) | round(1) }}%"></span></span>
+                            </div>
+                            <div class="meter__sub">{{ ui.cur_status(p.cur) }}</div>
+                        </td>
+                        <td class="right num col-optional">{{ p.rooms }}</td>
+                        <td class="right num col-optional">{{ p.badges_number }}</td>
+                        <td class="right num col-optional">{{ p.points | thousands }}</td>
+                        <td class="c-week">{{ ui.week_strip(p) }}</td>
+                        <td class="c-status">{{ ui.activity_status(p) }}</td>
+                        <td class="c-go"><span class="row-go" aria-hidden="true">Detail{{ ui.icon('chevron-right') }}</span></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div class="empty" data-empty hidden>
+            {{ ui.icon('search') }}
+            <p class="empty__title">Tidak ada peserta yang cocok</p>
+            <p>Coba kata kunci lain atau ubah filter.</p>
+        </div>
+        {% else %}
+        <div class="empty">
+            {{ ui.icon('inbox') }}
+            <p class="empty__title">Belum ada data</p>
+            <p>Collector belum pernah berhasil sync. Coba tombol Refresh semua.</p>
+        </div>
+        {% endif %}
+    </section>
+
     <section class="card card__body" aria-labelledby="week-title">
         <div class="section-head">
             <div>
@@ -182,89 +267,5 @@
         </section>
     </div>
 
-    <section class="card" aria-labelledby="board-title" data-board>
-        <div class="toolbar">
-            <h2 id="board-title" class="section-title">Semua peserta</h2>
-            <label class="input">
-                {{ ui.icon('search') }}
-                <span class="sr-only">Cari peserta</span>
-                <input type="search" placeholder="Cari nama atau username" data-search autocomplete="off">
-            </label>
-            {% set idle = people | rejectattr('active') | list | length %}
-            {% set behind = people | rejectattr('cur.status', 'equalto', 'ok') | list | length %}
-            <div class="segmented" role="group" aria-label="Filter peserta">
-                <button type="button" aria-pressed="true" data-filter="all">Semua<span class="count">{{ people | length }}</span></button>
-                <button type="button" aria-pressed="false" data-filter="idle">Tidak aktif<span class="count">{{ idle }}</span></button>
-                <button type="button" aria-pressed="false" data-filter="behind">Tertinggal<span class="count">{{ behind }}</span></button>
-            </div>
-            <span class="toolbar__end"><span data-result-count aria-live="polite"></span></span>
-        </div>
-        <p class="table-hint">{{ ui.icon('pointer') }}Klik baris peserta untuk melihat detail progress, badge, dan room</p>
-
-        {% if people %}
-        <div class="table-wrap">
-            <table class="table" data-sortable>
-                <thead>
-                    <tr>
-                        <th scope="col" class="pos" aria-sort="ascending"><button type="button" data-sort="position" data-type="num">#{{ ui.icon('sort', 'icon sort-icon') }}</button></th>
-                        <th scope="col" aria-sort="none"><button type="button" data-sort="name" data-type="text">Peserta{{ ui.icon('sort', 'icon sort-icon') }}</button></th>
-                        <th scope="col" aria-sort="none"><button type="button" data-sort="cur" data-type="num">Kurikulum{{ ui.icon('sort', 'icon sort-icon') }}</button></th>
-                        <th scope="col" class="right col-optional" aria-sort="none"><button type="button" data-sort="rooms" data-type="num">Total room{{ ui.icon('sort', 'icon sort-icon') }}</button></th>
-                        <th scope="col" class="right col-optional" aria-sort="none"><button type="button" data-sort="badges" data-type="num">Badge{{ ui.icon('sort', 'icon sort-icon') }}</button></th>
-                        <th scope="col" class="right col-optional" aria-sort="none"><button type="button" data-sort="points" data-type="num">Poin{{ ui.icon('sort', 'icon sort-icon') }}</button></th>
-                        <th scope="col" aria-sort="none"><button type="button" data-sort="weekly" data-type="num">7 hari terakhir{{ ui.icon('sort', 'icon sort-icon') }}</button></th>
-                        <th scope="col" aria-sort="none"><button type="button" data-sort="idle" data-type="num">Status{{ ui.icon('sort', 'icon sort-icon') }}</button></th>
-                        <th scope="col" class="c-go"><span class="sr-only">Detail</span></th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for p in people %}
-                    <tr data-href="{{ url_for('user_detail', username=p.username) }}"
-                        data-position="{{ p.position }}" data-name="{{ p.name | lower }}" data-username="{{ p.username | lower }}"
-                        data-rooms="{{ p.rooms }}" data-cur="{{ p.cur.done }}" data-badges="{{ p.badges_number }}" data-points="{{ p.points }}"
-                        data-weekly="{{ p.weekly }}" data-idle="{{ -1 if p.active else (p.days_idle if p.days_idle is not none else 9999) }}"
-                        data-is-idle="{{ 'false' if p.active else 'true' }}" data-behind="{{ 'false' if p.cur.status == 'ok' else 'true' }}">
-                        <td class="pos c-pos">{{ p.position }}</td>
-                        <td class="c-person">
-                            <div class="person">
-                                {{ ui.avatar(p) }}
-                                <div>
-                                    <a class="person__name" href="{{ url_for('user_detail', username=p.username) }}">{{ p.name }}</a>
-                                    <div class="person__user">@{{ p.username }}</div>
-                                    {{ ui.badge_row(p) }}
-                                </div>
-                            </div>
-                        </td>
-                        <td class="c-rooms">
-                            <div class="meter" title="{{ p.cur.done }} dari {{ p.cur.total }} room kurikulum">
-                                <span class="meter__value">{{ p.cur.done }}</span>
-                                <span class="meter__track" aria-hidden="true"><span class="meter__fill" style="width: {{ (p.cur.pct * 100) | round(1) }}%"></span></span>
-                            </div>
-                            <div class="meter__sub">{{ ui.cur_status(p.cur) }}</div>
-                        </td>
-                        <td class="right num col-optional">{{ p.rooms }}</td>
-                        <td class="right num col-optional">{{ p.badges_number }}</td>
-                        <td class="right num col-optional">{{ p.points | thousands }}</td>
-                        <td class="c-week">{{ ui.week_strip(p) }}</td>
-                        <td class="c-status">{{ ui.activity_status(p) }}</td>
-                        <td class="c-go"><span class="row-go" aria-hidden="true">Detail{{ ui.icon('chevron-right') }}</span></td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-        <div class="empty" data-empty hidden>
-            {{ ui.icon('search') }}
-            <p class="empty__title">Tidak ada peserta yang cocok</p>
-            <p>Coba kata kunci lain atau ubah filter.</p>
-        </div>
-        {% else %}
-        <div class="empty">
-            {{ ui.icon('inbox') }}
-            <p class="empty__title">Belum ada data</p>
-            <p>Collector belum pernah berhasil sync. Coba tombol Refresh semua.</p>
-        </div>
-        {% endif %}
-    </section>
 </div>
 {% endblock %}
